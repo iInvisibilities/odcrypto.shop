@@ -1,1 +1,15 @@
 @import 'tailwindcss';
+@font-face {
+	font-family: 'Coinbase';
+	src: url('/fonts/Coinbase_Sans-Regular-web-1.32.woff2') format('woff2');
+}
+
+.coinbase_login_button {
+	font-family: Coinbase;
+	@apply bg-[#0050ff] text-white text-lg p-1 px-2 rounded-md hover:cursor-pointer;
+}
+
+.logout_button {
+	font-family: Coinbase;
+	@apply bg-red-500 text-white opacity-80 text-lg p-1 px-2 rounded-md hover:cursor-pointer;
+}
