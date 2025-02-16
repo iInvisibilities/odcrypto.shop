@@ -1,4 +1,4 @@
-import type { Product } from '$lib/type/product.js';
+import type { Product } from '$lib/types/product.js';
 
 const coinbase_api_key: string = process.env.COINBASE_API_KEY ?? '';
 
