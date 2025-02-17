@@ -9,6 +9,11 @@
 	@apply bg-[#0050ff] text-white text-lg p-1 px-2 rounded-md hover:cursor-pointer;
 }
 
+.twitter_login_button {
+	font-family: Coinbase;
+	@apply bg-black text-white text-lg p-1 px-2 rounded-md hover:cursor-pointer;
+}
+
 .logout_button {
 	font-family: Coinbase;
 	@apply bg-red-500 text-white opacity-80 text-lg p-1 px-2 rounded-md hover:cursor-pointer;

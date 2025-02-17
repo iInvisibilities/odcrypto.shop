@@ -28,6 +28,6 @@ if (NODE_ENV === 'development') {
 	client = new MongoClient(MONGODB_URI, options);
 }
 
-console.log('Connected to MongoDB!');
-
 export default client;
+
+export const connectToMongoDB = async () => (client = await client.connect());

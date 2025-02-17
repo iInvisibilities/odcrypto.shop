@@ -1,7 +1,7 @@
-import client from '../mongodb';
 import { ObjectId } from 'mongodb';
 import { MONGODB_NAME, MONGODB_PRODCUTS_COLLECTION } from '$env/static/private';
 import type { Product } from '$lib/types/product';
+import client from '../mongodb';
 
 const coll = client.db(MONGODB_NAME).collection<Product>(MONGODB_PRODCUTS_COLLECTION);
 

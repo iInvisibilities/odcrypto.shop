@@ -7,11 +7,14 @@
 	<nav>
 		<div>
 			{#if !page.data.session}
-				<SignIn provider="coinbase">
+				<SignIn provider="coinbase" signInPage="user/signin">
 					<span class="coinbase_login_button" slot="submitButton">Sign In with Coinbase</span>
 				</SignIn>
+				<SignIn provider="twitter" signInPage="user/signin">
+					<span class="twitter_login_button" slot="submitButton">Sign In with X</span>
+				</SignIn>
 			{:else}
-				<SignOut>
+				<SignOut signOutPage="user/signout">
 					<span class="logout_button" slot="submitButton">Log Out</span>
 				</SignOut>
 			{/if}

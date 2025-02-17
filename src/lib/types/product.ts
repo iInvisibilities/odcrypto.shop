@@ -9,6 +9,14 @@ export type Product = {
 	bought_how_many_times: number;
 };
 
+export type ProductDAO = {
+	id: string;
+	name: string;
+	description: string;
+	price: number;
+	currency: string;
+};
+
 export type RelationshipType = 'BOUGHT' | 'POSTED' | 'WISHLISTED';
 
 export type ProductRelationship = {

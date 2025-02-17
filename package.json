@@ -52,6 +52,7 @@
 		"@auth/mongodb-adapter": "^3.7.4",
 		"@auth/sveltekit": "^1.7.4",
 		"crypto": "^1.0.1",
-		"mongodb": "^6.13.0"
+		"mongodb": "^6.13.0",
+		"redis": "^4.7.0"
 	}
 }

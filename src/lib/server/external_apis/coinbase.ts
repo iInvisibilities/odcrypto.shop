@@ -1,4 +1,5 @@
-import type { Product } from '$lib/types/product.js';
+import type { Product, ProductDAO } from '$lib/types/product.js';
+import { expectTransaction } from '../cache/cache_man/live_transactions';
 
 const coinbase_api_key: string = process.env.COINBASE_API_KEY ?? '';
 
@@ -6,7 +7,7 @@ const coinbase_api_key: string = process.env.COINBASE_API_KEY ?? '';
  * @param product product to be sold
  * @returns payment url for customer
  */
-export const createCharge = async (product: Product): Promise<string> => {
+export const createCharge = async (user_id: string, product: ProductDAO): Promise<string> => {
 	const charge_obj = {
 		name: product.name,
 		description: product.description,
@@ -27,6 +28,7 @@ export const createCharge = async (product: Product): Promise<string> => {
 	if (!charge_create.ok) return Promise.reject('FAILED TO CREATE CHARGE');
 
 	const charge_data = await charge_create.json();
+	await expectTransaction(charge_data.id, user_id, product.id);
 
 	return Promise.resolve(charge_data.hosted_url);
 };

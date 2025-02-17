@@ -1,4 +1,4 @@
-import { handleSuccessfulCharge } from '$lib/server/chargesmanager.js';
+import { handleSuccessfulCharge } from '$lib/server/manager/chargesmanager.js';
 import type { RequestHandler } from '@sveltejs/kit';
 import crypto from 'node:crypto';
 
@@ -24,7 +24,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	const event = webhook_data.event;
 	if (event.type == 'charge:pending') {
 		const charge_id = event.data.id;
-		handleSuccessfulCharge(charge_id);
+		await handleSuccessfulCharge(charge_id);
 	}
 
 	return new Response('OK', { status: 200 });
