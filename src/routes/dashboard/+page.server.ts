@@ -9,8 +9,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	if (session == null) redirect(303, `/`);
 
-	console.log('from page ser', session.user);
-
 	const user_product_relationships = await getRelationshipsHolderOf(session.user?.id ?? '');
 	if (user_product_relationships == null) return {};
 
