@@ -7,5 +7,11 @@ import { MONGODB_NAME } from '$env/static/private';
 
 export const { handle, signIn, signOut } = SvelteKitAuth({
 	providers: [Coinbase, Twitter],
+	callbacks: {
+		session({ session, user }) {
+			session.user.id = user.id;
+			return session;
+		}
+	},
 	adapter: MongoDBAdapter(client, { databaseName: MONGODB_NAME })
 });
