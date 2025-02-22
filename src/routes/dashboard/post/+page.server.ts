@@ -6,5 +6,5 @@ export const ssr = true;
 export const load: PageServerLoad = async ({ locals }) => {
 	const session = await locals.auth();
 
-	if (session == null) redirect(303, `/`);
+	if (!session || !session.user?.id) redirect(303, `/`);
 };

@@ -1,4 +1,4 @@
-<form action="" method="POST" enctype="multipart/form-data">
+<form action="" method="POST">
 	<input type="file" />
 	<input type="text" />
 	<textarea name="" id=""></textarea>
