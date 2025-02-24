@@ -1,22 +1,22 @@
 import { minioClient } from '../minio_client';
 
 export const requestUpload = async (user_id: string, file_name: string): Promise<String> => {
-	return await minioClient.presignedUrl('PUT', 'products', file_name, 3600, { prefix: user_id });
+	return await minioClient.presignedUrl('PUT', 'products', user_id + '/' + file_name, 1);
 };
 
-export const requestDownloadProduct = async (product_filename: string): Promise<String> => {
-	// POSSIBILITY THAT ADDING THE PRODUCTS PREFIX IS NEEDED TO RETRIEVE THAT PRODUCT, SO MAYBE ADD THE OWNER_ID PARAM TO THIS FUNCTION, NEEDS TESTING
-	return await minioClient.presignedGetObject('products', product_filename, 3600);
+export const requestDownloadProduct = async (
+	owner_id: string,
+	product_filename: string
+): Promise<String> => {
+	return await minioClient.presignedGetObject('products', owner_id + '/' + product_filename, 1);
 };
 
 export const requestListAllProductsByUser = async (user_id: string): Promise<String> => {
-	return await minioClient.presignedUrl('GET', 'products', '', 10, { prefix: user_id });
+	return await minioClient.presignedUrl('GET', 'products', user_id + '/*', 10);
 };
 
-export const requestDeleteProduct = async (product_filename: string) => {
-	// POSSIBILITY THAT ADDING THE PRODUCTS PREFIX IS NEEDED TO RETRIEVE THAT PRODUCT, SO MAYBE ADD THE OWNER_ID PARAM TO THIS FUNCTION, NEEDS TESTING
-
-	await minioClient.removeObject('products', product_filename);
+export const requestDeleteProduct = async (owner_id: string, product_filename: string) => {
+	await minioClient.removeObject('products', owner_id + '/' + product_filename);
 };
 /*
 USE PRESIGNED URLS PROPERTY <- this looks more promising

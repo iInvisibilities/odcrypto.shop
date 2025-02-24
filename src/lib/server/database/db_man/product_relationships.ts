@@ -11,7 +11,7 @@ const coll = client
 	.db(MONGODB_NAME)
 	.collection<ProductRelationhipHolder>(MONGODB_PRODCUT_RELATIONSHIPS_COLLECTION);
 
-export async function createRelationship(
+export async function createRelationshipHolder(
 	relationshipholder_object: ProductRelationhipHolder
 ): Promise<ProductRelationhipHolder> {
 	const result = await coll.insertOne(relationshipholder_object);
@@ -28,8 +28,13 @@ export async function establishRelationship(
 	user_id: string,
 	relationship_obj: ProductRelationship
 ): Promise<void> {
-	const relationships_holder = await getRelationshipsHolderOf(user_id);
-	if (!relationships_holder) return;
+	let relationships_holder = await getRelationshipsHolderOf(user_id);
+	if (!relationships_holder) {
+		relationships_holder = await createRelationshipHolder({
+			user_id: new ObjectId(user_id),
+			relations: []
+		});
+	}
 	relationships_holder.relations.push(relationship_obj);
 
 	await coll.updateOne({ user_id: new ObjectId(user_id) }, { $set: relationships_holder });
@@ -43,7 +48,10 @@ export async function deleteEstablishedRelationship(
 	const relationships_holder = await getRelationshipsHolderOf(user_id);
 	if (!relationships_holder) return;
 	relationships_holder.relations = relationships_holder.relations.filter(
-		(rel) => rel.product_id.toString() !== product_id && rel.relationship_type !== relationship_type
+		(rel) =>
+			rel.product_id &&
+			rel.product_id.toString() !== product_id &&
+			rel.relationship_type !== relationship_type
 	);
 
 	await coll.updateOne({ user_id: new ObjectId(user_id) }, { $set: relationships_holder });

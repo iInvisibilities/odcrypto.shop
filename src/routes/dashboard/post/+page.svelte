@@ -4,9 +4,15 @@
 	let product_price: number;
 
 	const requestSignedURL = async (file_name: string): Promise<string | null> => {
-		const request = await fetch('/', {
+		const request = await fetch('/dashboard/post', {
 			method: 'POST',
-			body: JSON.stringify({ file_name })
+			body: JSON.stringify({
+				product_name,
+				product_description,
+				product_price,
+				product_price_currency,
+				file_name
+			})
 		});
 
 		return request.ok ? (await request.json())['signed_url'] : null;
@@ -16,13 +22,13 @@
 		const file: File | null = files.item(0);
 		if (!file) return;
 		const file_name = file.name;
-		const uploadURL = await requestSignedURL(file_name);
-		if (!uploadURL) {
+		const signed_url = await requestSignedURL(file_name);
+
+		if (!signed_url) {
 			// ERROR
 			return;
 		}
-
-		const uploadOp = await fetch(uploadURL, {
+		const uploadOp = await fetch(signed_url, {
 			method: 'PUT',
 			body: file
 		});

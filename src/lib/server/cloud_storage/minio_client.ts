@@ -1,11 +1,11 @@
 import { Client } from 'minio';
-import { MINIO_ACCESS_KEY, MINIO_SECRET_KEY } from '$env/static/private';
+import { MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY } from '$env/static/private';
 
 export let minioClient: Client;
 
 export const connectMinioClient = () => {
 	minioClient = new Client({
-		endPoint: 'k1.dotfoss.com',
+		endPoint: MINIO_ENDPOINT,
 		port: 9000,
 		useSSL: true,
 		accessKey: MINIO_ACCESS_KEY,

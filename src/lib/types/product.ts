@@ -6,6 +6,7 @@ export type Product = {
 	description: string;
 	price: number;
 	currency: string;
+	file_name: string;
 	bought_how_many_times: number;
 };
 
@@ -21,7 +22,7 @@ export type RelationshipType = 'BOUGHT' | 'POSTED' | 'WISHLISTED';
 
 export type ProductRelationship = {
 	relationship_type: RelationshipType;
-	product_id: ObjectId;
+	product_id?: ObjectId;
 	established_at: Date;
 };
 
