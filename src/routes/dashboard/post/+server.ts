@@ -29,7 +29,7 @@ export const POST = async ({ request, locals }): Promise<Response> => {
 		description: product_description,
 		price: product_price,
 		currency: product_price_currency,
-		file_name: file_name,
+		file_name: user_id + '/' + file_name,
 		bought_how_many_times: 0
 	});
 

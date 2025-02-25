@@ -11,6 +11,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const user_product_relationships = await getRelationshipsHolderOf(session.user?.id ?? '');
 	if (user_product_relationships == null) return {};
-
-	return { relations: user_product_relationships.relations };
+	return {
+		relations: user_product_relationships.relations.map((rlp) => {
+			return { ...rlp, product_id: (rlp.product_id ?? '').toString() };
+		})
+	};
 };

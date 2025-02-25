@@ -4,19 +4,20 @@ export const requestUpload = async (user_id: string, file_name: string): Promise
 	return await minioClient.presignedUrl('PUT', 'products', user_id + '/' + file_name, 1);
 };
 
-export const requestDownloadProduct = async (
-	owner_id: string,
-	product_filename: string
-): Promise<String> => {
-	return await minioClient.presignedGetObject('products', owner_id + '/' + product_filename, 1);
+/**
+ * @param product_filename Owner id must be included in the product' file name seperated with a "/" indicating it as the prefix
+ * @returns A presigned URL
+ */
+export const requestDownloadProduct = async (product_filename: string): Promise<String> => {
+	return await minioClient.presignedGetObject('products', product_filename, 1);
 };
 
-export const requestListAllProductsByUser = async (user_id: string): Promise<String> => {
-	return await minioClient.presignedUrl('GET', 'products', user_id + '/*', 10);
-};
-
-export const requestDeleteProduct = async (owner_id: string, product_filename: string) => {
-	await minioClient.removeObject('products', owner_id + '/' + product_filename);
+/**
+ * @param product_filename Owner id must be included in the product' file name seperated with a "/" indicating it as the prefix
+ * @returns A presigned URL
+ */
+export const requestDeleteProduct = async (product_filename: string) => {
+	await minioClient.removeObject('products', product_filename);
 };
 /*
 USE PRESIGNED URLS PROPERTY <- this looks more promising

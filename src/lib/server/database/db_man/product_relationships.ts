@@ -1,11 +1,12 @@
 import { ObjectId } from 'mongodb';
 import { MONGODB_NAME, MONGODB_PRODCUT_RELATIONSHIPS_COLLECTION } from '$env/static/private';
+
+import client from '../mongodb';
 import type {
 	ProductRelationhipHolder,
 	ProductRelationship,
 	RelationshipType
 } from '$lib/types/product';
-import client from '../mongodb';
 
 const coll = client
 	.db(MONGODB_NAME)

@@ -18,3 +18,7 @@
 	font-family: Coinbase;
 	@apply bg-red-500 text-white opacity-80 text-lg p-1 px-2 rounded-md hover:cursor-pointer;
 }
+
+.Coinbase {
+	font-family: Coinbase;
+}
