@@ -10,7 +10,8 @@ export async function createProduct(product: Product): Promise<Product> {
 	return { ...product, _id: result.insertedId };
 }
 
-export async function getProduct(id: string): Promise<Product | null> {
+export async function getProduct(id: string | undefined): Promise<Product | null> {
+	if (!id) return null;
 	return await coll.findOne({ _id: new ObjectId(id) });
 }
 

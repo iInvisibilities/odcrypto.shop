@@ -10,6 +10,15 @@ export type Product = {
 	bought_how_many_times: number;
 };
 
+export type fProduct = {
+	name: string;
+	description: string;
+	price: number;
+	currency: string;
+	file_name: string;
+	bought_how_many_times: number;
+};
+
 export type ProductDAO = {
 	id: string;
 	name: string;
