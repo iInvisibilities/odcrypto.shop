@@ -22,7 +22,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			if (!rlp.product_id) return null;
 
 			const product = await getProduct(rlp.product_id?.toString());
-			if (!product) {
+			if (!product || (rlp.relationship_type == 'WISHLISTED' && product.deleted)) {
 				await deleteEstablishedRelationship(
 					session.user?.id ?? '',
 					rlp.product_id?.toString(),
