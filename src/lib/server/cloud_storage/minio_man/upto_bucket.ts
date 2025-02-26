@@ -1,15 +1,15 @@
 import { minioClient } from '../minio_client';
 
 export const requestUpload = async (user_id: string, file_name: string): Promise<String> => {
-	return await minioClient.presignedUrl('PUT', 'products', user_id + '/' + file_name, 1);
+	return await minioClient.presignedUrl('PUT', 'products', user_id + '/' + file_name, 60);
 };
 
 /**
  * @param product_filename Owner id must be included in the product' file name seperated with a "/" indicating it as the prefix
  * @returns A presigned URL
  */
-export const requestDownloadProduct = async (product_filename: string): Promise<String> => {
-	return await minioClient.presignedGetObject('products', product_filename, 1);
+export const requestDownloadProduct = async (product_filename: string): Promise<string> => {
+	return await minioClient.presignedGetObject('products', product_filename, 60);
 };
 
 /**

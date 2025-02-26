@@ -22,3 +22,19 @@
 .Coinbase {
 	font-family: Coinbase;
 }
+
+.notification {
+	@apply fixed z-10 right-0 bottom-0 m-10 text-white bg-gray-700 p-1 rounded-md shadow-md px-2;
+	@apply opacity-0 select-none pointer-events-none;
+}
+
+@keyframes show_not {
+	0%,
+	100% {
+		opacity: 0;
+	}
+	50% {
+		opacity: 100%;
+		translate: transformY(350px);
+	}
+}

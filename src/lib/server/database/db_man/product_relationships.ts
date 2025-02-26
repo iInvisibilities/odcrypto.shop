@@ -51,8 +51,22 @@ export async function deleteEstablishedRelationship(
 	relationships_holder.relations = relationships_holder.relations.filter(
 		(rel) =>
 			rel.product_id &&
-			rel.product_id.toString() !== product_id &&
-			rel.relationship_type !== relationship_type
+			(rel.product_id.toString() != product_id ||
+				(rel.product_id.toString() == product_id &&
+					rel.relationship_type.toString() != relationship_type.toString()))
+	);
+
+	await coll.updateOne({ user_id: new ObjectId(user_id) }, { $set: relationships_holder });
+}
+
+export async function deleteAllEstablishedRelationships(
+	user_id: string,
+	product_id: string
+): Promise<void> {
+	const relationships_holder = await getRelationshipsHolderOf(user_id);
+	if (!relationships_holder) return;
+	relationships_holder.relations = relationships_holder.relations.filter(
+		(rel) => rel.product_id && rel.product_id.toString() != product_id
 	);
 
 	await coll.updateOne({ user_id: new ObjectId(user_id) }, { $set: relationships_holder });
@@ -64,7 +78,5 @@ export async function getAllRelationshipsOfType(
 ): Promise<ProductRelationship[]> {
 	const relationships_holder = await getRelationshipsHolderOf(user_id);
 	if (!relationships_holder) return [];
-	return relationships_holder.relations.filter(
-		(rel) => rel.relationship_type === relationship_type
-	);
+	return relationships_holder.relations.filter((rel) => rel.relationship_type == relationship_type);
 }

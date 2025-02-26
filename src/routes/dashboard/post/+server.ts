@@ -17,7 +17,8 @@ export const POST = async ({ request, locals }): Promise<Response> => {
 		!product_description ||
 		!product_price ||
 		!product_price_currency ||
-		!file_name
+		!file_name ||
+		(<string>product_price_currency).length > 3
 	) {
 		return new Response('Bad request!', { status: 400 });
 	}

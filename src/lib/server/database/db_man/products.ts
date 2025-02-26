@@ -26,3 +26,7 @@ export async function deleteProduct(id: string): Promise<void> {
 export async function incrementBoughtHowManyTimes(id: string): Promise<void> {
 	await coll.updateOne({ _id: new ObjectId(id) }, { $inc: { bought_how_many_times: 1 } });
 }
+
+export async function markAsDeleted(id: string): Promise<void> {
+	await coll.updateOne({ _id: new ObjectId(id) }, { $set: { deleted: true } });
+}

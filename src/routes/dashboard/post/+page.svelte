@@ -28,6 +28,7 @@
 			// ERROR
 			return;
 		}
+
 		const uploadOp = await fetch(signed_url, {
 			method: 'PUT',
 			body: file

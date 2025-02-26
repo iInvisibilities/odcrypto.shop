@@ -8,6 +8,7 @@ export type Product = {
 	currency: string;
 	file_name: string;
 	bought_how_many_times: number;
+	deleted?: boolean;
 };
 
 export type fProduct = {
@@ -17,6 +18,7 @@ export type fProduct = {
 	currency: string;
 	file_name: string;
 	bought_how_many_times: number;
+	deleted?: boolean;
 };
 
 export type ProductDAO = {
