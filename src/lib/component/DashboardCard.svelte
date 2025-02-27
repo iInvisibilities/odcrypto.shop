@@ -77,7 +77,8 @@
 			? 'bg-fuchsia-500'
 			: current_page == 'BOUGHT'
 				? 'bg-green-700'
-				: 'bg-gray-900'} text-white rounded-lg flex items-center justify-between p-2 mx-2 shadow-lg my-1 {current_page
+				: 'bg-gray-900'} text-white rounded-lg flex items-center justify-between p-2 mx-2 shadow-lg my-1 {current_page &&
+	!relation.product.deleted
 		? 'hover:outline-4 hover:cursor-pointer'
 		: ''} xl:w-2/3"
 >

@@ -5,7 +5,7 @@ import {
 } from '$lib/server/database/db_man/product_relationships';
 import type { PageServerLoad } from './$types';
 import { getProduct } from '$lib/server/database/db_man/products';
-import type { fProduct, RelationshipType } from '$lib/types/product';
+import type { fProduct } from '$lib/types/product';
 
 export const ssr = true;
 

@@ -37,6 +37,9 @@ export async function establishRelationship(
 		});
 	}
 	relationships_holder.relations.push(relationship_obj);
+	relationships_holder.relations = relationships_holder.relations.sort(
+		(rlp, rlp1) => rlp1.established_at.getTime() - rlp.established_at.getTime()
+	);
 
 	await coll.updateOne({ user_id: new ObjectId(user_id) }, { $set: relationships_holder });
 }
