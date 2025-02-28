@@ -4,21 +4,12 @@
 	import { SignOut } from '@auth/sveltekit/components';
 	import type { RelationshipType } from '$lib/types/product';
 	import type { PageProps } from './$types';
-	import { page } from '$app/state';
 
 	let { data }: PageProps = $props();
 
 	let current_page: RelationshipType | undefined = $state();
-	/*let shown_data = $state(
-		data.relations
-			? data.relations
-					.filter((rlp) => !current_page || rlp.relationship_type == current_page)
-					.sort((a, b) => b.established_at.getTime() - a.established_at.getTime())
-					.map((rlp) => {
-						return { ...rlp, index: data.relations.indexOf(rlp) };
-					})
-			: undefined
-	);*/
+	const deleted_product_elements: string[] = [];
+
 	let last_sel: HTMLElement | undefined = $state();
 
 	const onclick = (e: MouseEvent) => {
@@ -117,7 +108,13 @@
 			{#each data.relations as relation}
 				{#await relation then rlp}
 					{#if rlp && (!current_page || rlp.relationship_type == current_page)}
-						<DashboardCard {push_not} relation={rlp} {current_page} />
+						<DashboardCard
+							{deleted_product_elements}
+							is_alive={!deleted_product_elements.includes(rlp.product_id)}
+							{push_not}
+							relation={rlp}
+							{current_page}
+						/>
 					{/if}
 				{:catch error}
 					<h2>Error loading this product...</h2>

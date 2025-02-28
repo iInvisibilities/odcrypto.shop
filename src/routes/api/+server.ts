@@ -28,8 +28,9 @@ export const DELETE: RequestHandler = async ({ url, locals }) => {
 				(pred) =>
 					pred.product_id && product._id && pred.product_id.toString() == product._id.toString()
 			)
-		)
+		) {
 			return new Response('Unauthorized!', { status: 401 });
+		}
 
 		await deleteEstablishedRelationship(user_id, product_id, 'POSTED');
 		/*await deleteProduct(product_id);

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import type { fProduct, RelationshipType } from '$lib/types/product';
 
 	export let relation: {
@@ -10,6 +9,8 @@
 	};
 	export let current_page: string | undefined;
 	export let push_not: Function;
+	export let is_alive: boolean;
+	export let deleted_product_elements: string[];
 
 	async function operate_upon(current_page: string, force_download?: boolean) {
 		if (force_download) {
@@ -20,6 +21,7 @@
 			case 'POSTED':
 			case 'WISHLISTED':
 				if (!confirm('Are you sure?')) break;
+				push_not('Loading...');
 				const delRequ = await fetch(
 					'/api?type=' + current_page + '&product_id=' + relation.product_id,
 					{
@@ -33,6 +35,8 @@
 							(current_page == 'WISHLISTED' ? ' from your wishlist' : '') +
 							' successfully!'
 					);
+					is_alive = false;
+					deleted_product_elements.push(relation.product_id ?? '');
 				} else {
 					push_not(
 						(current_page == 'POSTED' ? 'Could not delete ' : 'Could not remove ') +
@@ -70,78 +74,80 @@
 	}
 </script>
 
-<div
-	class="{current_page == 'POSTED'
-		? 'bg-blue-500'
-		: current_page == 'WISHLISTED'
-			? 'bg-fuchsia-500'
-			: current_page == 'BOUGHT'
-				? 'bg-green-700'
-				: 'bg-gray-900'} text-white rounded-lg flex items-center justify-between p-2 mx-2 shadow-lg my-1 {current_page &&
-	!relation.product.deleted
-		? 'hover:outline-4 hover:cursor-pointer'
-		: ''} xl:w-2/3"
->
-	<a
-		href={current_page && !relation.product.deleted
-			? '/' + (relation.product_id ?? 'dashboard')
-			: undefined}
-		target={current_page && !relation.product.deleted ? '_blank' : '_self'}
-		class="{!current_page
-			? 'flex gap-2 items-center flex-wrap'
-			: 'grid'} overflow-auto overflow-y-auto w-full"
+{#if is_alive}
+	<div
+		class="{current_page == 'POSTED'
+			? 'bg-blue-500'
+			: current_page == 'WISHLISTED'
+				? 'bg-fuchsia-500'
+				: current_page == 'BOUGHT'
+					? 'bg-green-700'
+					: 'bg-gray-900'} text-white rounded-lg flex items-center justify-between p-2 mx-2 shadow-lg my-1 {current_page &&
+		!relation.product.deleted
+			? 'hover:outline-4 hover:cursor-pointer'
+			: ''} xl:w-2/3"
 	>
-		{#if current_page == undefined}
-			<span class="bg-gray-700 text-white p-1 rounded-md shadow-sm select-none"
-				>{relation.relationship_type}</span
-			>
-		{/if}
-		<div class="flex items-center justify-around w-max gap-2 min-w-max">
-			<span class={relation.product.deleted ? 'opacity-50 line-through' : ''}
-				>{relation.product.name}</span
-			>
-			{#if current_page}
-				<span class="opacity-75 select-none"
-					>for {relation.product.price}{relation.product.currency}</span
+		<a
+			href={current_page && !relation.product.deleted
+				? '/' + (relation.product_id ?? 'dashboard')
+				: undefined}
+			target={current_page && !relation.product.deleted ? '_blank' : '_self'}
+			class="{!current_page
+				? 'flex gap-2 items-center flex-wrap'
+				: 'grid'} overflow-auto overflow-y-auto w-full"
+		>
+			{#if current_page == undefined}
+				<span class="bg-gray-700 text-white p-1 rounded-md shadow-sm select-none"
+					>{relation.relationship_type}</span
 				>
 			{/if}
-		</div>
-		<span class="opacity-75 md:text-sm text-xs min-w-max mx-2 select-none"
-			>@ {relation.established_at}</span
-		>
-	</a>
-	{#if current_page == 'POSTED' || current_page == 'WISHLISTED' || current_page == 'BOUGHT'}
-		{#if current_page == 'POSTED'}
-			<button
-				onclick={() => operate_upon(current_page, true)}
-				class="bg-green-800 rounded-md w-max p-[.3rem] cursor-pointer hover:scale-95 transition-all active:scale-90 shadow-md mr-1"
+			<div class="flex items-center justify-around w-max gap-2 min-w-max">
+				<span class={relation.product.deleted ? 'opacity-50 line-through' : ''}
+					>{relation.product.name}</span
+				>
+				{#if current_page}
+					<span class="opacity-75 select-none"
+						>for {relation.product.price}{relation.product.currency}</span
+					>
+				{/if}
+			</div>
+			<span class="opacity-75 md:text-sm text-xs min-w-max mx-2 select-none"
+				>@ {relation.established_at}</span
 			>
-				<img src="download.svg" class="w-5 invert" alt="" />
-			</button>
+		</a>
+		{#if current_page == 'POSTED' || current_page == 'WISHLISTED' || current_page == 'BOUGHT'}
+			{#if current_page == 'POSTED'}
+				<button
+					onclick={() => operate_upon(current_page, true)}
+					class="bg-green-800 rounded-md w-max p-[.3rem] cursor-pointer hover:scale-95 transition-all active:scale-90 shadow-md mr-1"
+				>
+					<img src="download.svg" class="w-5 invert" alt="" />
+				</button>
+				<button
+					onclick={open_product_editor}
+					class="bg-blue-800 rounded-md w-max p-[.3rem] cursor-pointer hover:scale-95 transition-all active:scale-90 shadow-md mr-1"
+				>
+					<img src="edit.svg" class="w-5 invert" alt="" />
+				</button>
+			{/if}
 			<button
-				onclick={open_product_editor}
-				class="bg-blue-800 rounded-md w-max p-[.3rem] cursor-pointer hover:scale-95 transition-all active:scale-90 shadow-md mr-1"
-			>
-				<img src="edit.svg" class="w-5 invert" alt="" />
-			</button>
-		{/if}
-		<button
-			onclick={() => operate_upon(current_page)}
-			class="{current_page == 'POSTED'
-				? 'bg-[#FC565E]'
-				: current_page == 'WISHLISTED'
-					? 'bg-gray-700'
-					: 'bg-green-800'} rounded-md w-max p-[.3rem] cursor-pointer hover:scale-95 transition-all active:scale-90 shadow-md"
-		>
-			<img
-				src="{current_page == 'POSTED'
-					? 'delete'
+				onclick={() => operate_upon(current_page)}
+				class="{current_page == 'POSTED'
+					? 'bg-[#FC565E]'
 					: current_page == 'WISHLISTED'
-						? 'dewishlist'
-						: 'download'}.svg"
-				class="w-5 invert"
-				alt=""
-			/></button
-		>
-	{/if}
-</div>
+						? 'bg-gray-700'
+						: 'bg-green-800'} rounded-md w-max p-[.3rem] cursor-pointer hover:scale-95 transition-all active:scale-90 shadow-md"
+			>
+				<img
+					src="{current_page == 'POSTED'
+						? 'delete'
+						: current_page == 'WISHLISTED'
+							? 'dewishlist'
+							: 'download'}.svg"
+					class="w-5 invert"
+					alt=""
+				/></button
+			>
+		{/if}
+	</div>
+{/if}
