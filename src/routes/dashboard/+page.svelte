@@ -2,7 +2,7 @@
 	import DashboardBtn from '$lib/component/DashboardBtn.svelte';
 	import DashboardCard from '$lib/component/DashboardCard.svelte';
 	import { SignOut } from '@auth/sveltekit/components';
-	import type { RelationshipType } from '$lib/types/product';
+	import type { EPInformation, RelationshipType } from '$lib/types/product';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -31,15 +31,7 @@
 			return;
 
 		current_page = valAtrr == 'HISTORY' ? undefined : valAtrr;
-		/*shown_data = data.relations
-			? data.relations
-					.filter((rlp) => !current_page || rlp.relationship_type == current_page)
-					.sort((a, b) => b.established_at.getTime() - a.established_at.getTime())
-					.map((rlp) => {
-						return { ...rlp, index: data.relations.indexOf(rlp) };
-					})
-			: undefined;
-		*/
+
 		e.currentTarget?.classList.add('font-bold', 'pointer-events-none');
 		e.currentTarget?.classList.remove('hover:opacity-80');
 
@@ -61,7 +53,45 @@
 		btn.classList.remove('hover:opacity-80');
 		last_sel = btn;
 	};
+
+	let product_info: EPInformation | undefined = $state();
+
+	const open_product_editor = (prod_info: EPInformation) => {
+		product_info = prod_info;
+	};
+
+	function save_data(_event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement }) {
+		$state.snapshot(product_info);
+		// NOT BEING EDITED, SO WILL HAVE TO FIND A WAY TO MANUALLY UPDATE THE VALUES ONCE save_data IS CALLED...
+		product_info = undefined;
+	}
 </script>
+
+{#if product_info}
+	<div
+		class="absolute z-20 inset-0 m-auto h-max w-max grid bg-white backdrop-opacity-40 *:h-max *:w-max p-1 shadow-lg border-2"
+		style="grid-template-columns: repeat(2, 1fr);"
+	>
+		{#each Object.keys(product_info) as product_info_type}
+			<label for="name">{product_info_type.replace('_', ' ') + ':'}</label>
+			<input
+				type="text"
+				name="name"
+				value={product_info[product_info_type as keyof EPInformation]}
+			/>
+		{/each}
+		<button
+			onclick={() => (product_info = undefined)}
+			class="hover:opacity-75 justify-self-center cursor-default opacity-80 border-b-2 inline-flex select-none gap-2 text-lg items-center px-2 py-1 text-white bg-red-500 active dark:bg-red-500"
+			>Cancel</button
+		>
+		<button
+			onclick={save_data}
+			class="hover:opacity-75 justify-self-center cursor-default opacity-80 border-b-2 inline-flex select-none gap-2 text-lg items-center px-2 py-1 text-white bg-green-500 active dark:bg-green-500"
+			>Save</button
+		>
+	</div>
+{/if}
 
 <div class="notification" contenteditable="false" bind:this={push_not_el}></div>
 <div class="md:flex Coinbase min-h-dvh">
@@ -107,10 +137,10 @@
 			</h3>
 			{#each data.relations as relation}
 				{#await relation then rlp}
-					{#if rlp && (!current_page || rlp.relationship_type == current_page)}
+					{#if rlp && (!current_page || rlp.relationship_type == current_page) && !deleted_product_elements.includes(rlp.product_id)}
 						<DashboardCard
+							{open_product_editor}
 							{deleted_product_elements}
-							is_alive={!deleted_product_elements.includes(rlp.product_id)}
 							{push_not}
 							relation={rlp}
 							{current_page}

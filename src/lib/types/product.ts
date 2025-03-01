@@ -8,16 +8,8 @@ export type Product = {
 	currency: string;
 	file_name: string;
 	bought_how_many_times: number;
-	deleted?: boolean;
-};
-
-export type fProduct = {
-	name: string;
-	description: string;
-	price: number;
-	currency: string;
-	file_name: string;
-	bought_how_many_times: number;
+	icon_url?: string;
+	wallet_address?: string;
 	deleted?: boolean;
 };
 
@@ -27,6 +19,16 @@ export type ProductDAO = {
 	description: string;
 	price: number;
 	currency: string;
+};
+
+export type EPInformation = {
+	name: string;
+	description: string;
+	price: number;
+	currency: string;
+	file_name: string;
+	icon_url?: string;
+	wallet_address?: string;
 };
 
 export type RelationshipType = 'BOUGHT' | 'POSTED' | 'WISHLISTED';

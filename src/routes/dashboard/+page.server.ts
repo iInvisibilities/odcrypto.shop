@@ -5,7 +5,6 @@ import {
 } from '$lib/server/database/db_man/product_relationships';
 import type { PageServerLoad } from './$types';
 import { getProduct } from '$lib/server/database/db_man/products';
-import type { fProduct } from '$lib/types/product';
 
 export const ssr = true;
 
@@ -30,11 +29,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 				);
 				return;
 			}
-			const fproduct: fProduct = (({ _id, ...product }) => product)(product);
 			return {
 				...rlp,
-				product_id: rlp.product_id?.toString(),
-				product: fproduct
+				product: { ...product, _id: rlp.product_id.toString() ?? '' },
+				product_id: rlp.product_id.toString() ?? ''
 			};
 		})
 	};
