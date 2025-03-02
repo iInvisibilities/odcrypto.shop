@@ -61,8 +61,7 @@
 	};
 
 	function save_data(_event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement }) {
-		$state.snapshot(product_info);
-		// NOT BEING EDITED, SO WILL HAVE TO FIND A WAY TO MANUALLY UPDATE THE VALUES ONCE save_data IS CALLED...
+		// MOSTTA THE WORK GONE BE HERE
 		product_info = undefined;
 	}
 </script>
@@ -75,9 +74,9 @@
 		{#each Object.keys(product_info) as product_info_type}
 			<label for="name">{product_info_type.replace('_', ' ') + ':'}</label>
 			<input
+				bind:value={product_info[product_info_type as keyof EPInformation]}
 				type="text"
 				name="name"
-				value={product_info[product_info_type as keyof EPInformation]}
 			/>
 		{/each}
 		<button
