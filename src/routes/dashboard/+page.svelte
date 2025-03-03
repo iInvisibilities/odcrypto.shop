@@ -60,8 +60,27 @@
 		product_info = prod_info;
 	};
 
-	function save_data(_event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement }) {
-		// MOSTTA THE WORK GONE BE HERE
+	async function save_data(
+		_event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement }
+	) {
+		if (!data.relations || !product_info) return;
+		const edited_product_index = data.relations.findIndex(
+			async (v) => (await v)?.product_id == product_info?.product_id
+		);
+		if (edited_product_index == -1) return;
+
+		const edited_product = await data.relations[edited_product_index];
+		if (!edited_product) return;
+
+		edited_product.product.name = product_info?.name;
+		edited_product.product.description = product_info?.description;
+		edited_product.product.currency = product_info?.currency;
+		edited_product.product.price = product_info?.price;
+		edited_product.product.wallet_address = product_info?.wallet_address;
+		edited_product.product.file_name =
+			edited_product.product.file_name.split('/')[0] + '/' + product_info?.file_name;
+		edited_product.product.icon_url = product_info?.icon_url;
+
 		product_info = undefined;
 	}
 </script>
@@ -71,7 +90,7 @@
 		class="absolute z-20 inset-0 m-auto h-max w-max grid bg-white backdrop-opacity-40 *:h-max *:w-max p-1 shadow-lg border-2"
 		style="grid-template-columns: repeat(2, 1fr);"
 	>
-		{#each Object.keys(product_info) as product_info_type}
+		{#each Object.keys(product_info).filter((pKey) => pKey != 'product_id') as product_info_type}
 			<label for="name">{product_info_type.replace('_', ' ') + ':'}</label>
 			<input
 				bind:value={product_info[product_info_type as keyof EPInformation]}

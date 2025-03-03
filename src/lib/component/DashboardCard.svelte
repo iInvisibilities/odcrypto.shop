@@ -128,6 +128,7 @@
 			<button
 				onclick={() =>
 					open_product_editor({
+						product_id: relation.product._id,
 						name: relation.product.name,
 						description: relation.product.description,
 						price: relation.product.price,
