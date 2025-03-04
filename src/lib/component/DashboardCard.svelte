@@ -1,26 +1,17 @@
 <script lang="ts">
-	import type { RelationshipType, EPInformation } from '$lib/types/product';
-
-	export let relation: {
-		product: {
-			_id: string;
-			name: string;
-			description: string;
-			price: number;
-			currency: string;
-			file_name: string;
-			bought_how_many_times: number;
-			icon_url?: string;
-			wallet_address?: string;
-			deleted?: boolean;
-		};
-		relationship_type: RelationshipType;
-		established_at: Date;
-	};
-	export let current_page: string | undefined;
+	let {
+		relation = $bindable(),
+		current_page = $bindable(),
+		push_not = $bindable(),
+		deleted_product_elements = $bindable(),
+		open_product_editor = $bindable()
+	} = $props();
+	/*export let current_page: string | undefined;
 	export let push_not: Function;
 	export let deleted_product_elements: string[];
-	export let open_product_editor: (info: EPInformation) => void;
+	export let open_product_editor: (info: EPInformation) => void;*/
+
+	//export let product_info: EPInformation | undefined;
 
 	let own_dom: HTMLDivElement;
 

@@ -12,6 +12,9 @@
 
 	let last_sel: HTMLElement | undefined = $state();
 
+	let forceUpdate = async (_: number) => {};
+	let doRerender: number = $state(0);
+
 	const onclick = (e: MouseEvent) => {
 		if (!(e.currentTarget instanceof HTMLElement)) return;
 		if (last_sel) {
@@ -63,14 +66,22 @@
 	async function save_data(
 		_event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement }
 	) {
-		if (!data.relations || !product_info) return;
+		if (!data.relations || !product_info) {
+			product_info = undefined;
+			return;
+		}
 		const edited_product_index = data.relations.findIndex(
 			async (v) => (await v)?.product_id == product_info?.product_id
 		);
-		if (edited_product_index == -1) return;
-
+		if (edited_product_index == -1) {
+			product_info = undefined;
+			return;
+		}
 		const edited_product = await data.relations[edited_product_index];
-		if (!edited_product) return;
+		if (!edited_product) {
+			product_info = undefined;
+			return;
+		}
 
 		edited_product.product.name = product_info?.name;
 		edited_product.product.description = product_info?.description;
@@ -81,7 +92,10 @@
 			edited_product.product.file_name.split('/')[0] + '/' + product_info?.file_name;
 		edited_product.product.icon_url = product_info?.icon_url;
 
+		data.relations[edited_product_index] = Promise.resolve(edited_product);
+
 		product_info = undefined;
+		doRerender = doRerender + 1;
 	}
 </script>
 
@@ -153,21 +167,23 @@
 					>
 				{/if}
 			</h3>
-			{#each data.relations as relation}
-				{#await relation then rlp}
-					{#if rlp && (!current_page || rlp.relationship_type == current_page) && !deleted_product_elements.includes(rlp.product_id)}
-						<DashboardCard
-							{open_product_editor}
-							{deleted_product_elements}
-							{push_not}
-							relation={rlp}
-							{current_page}
-						/>
-					{/if}
-				{:catch error}
-					<h2>Error loading this product...</h2>
-				{/await}
-			{/each}
+			{#await forceUpdate(doRerender) then _}
+				{#each data.relations as relation}
+					{#await relation then rlp}
+						{#if rlp && (!current_page || rlp.relationship_type == current_page) && !deleted_product_elements.includes(rlp.product_id)}
+							<DashboardCard
+								{open_product_editor}
+								{deleted_product_elements}
+								{push_not}
+								relation={rlp}
+								{current_page}
+							/>
+						{/if}
+					{:catch error}
+						<h2>Error loading this product...</h2>
+					{/await}
+				{/each}
+			{/await}
 		{/if}
 	</div>
 </div>
