@@ -1,10 +1,13 @@
 import { requestUpload } from '$lib/server/cloud_storage/minio_man/upto_bucket';
 import { establishRelationship } from '$lib/server/database/db_man/product_relationships.js';
 import { createProduct } from '$lib/server/database/db_man/products.js';
+import type { EPInformation } from '$lib/types/product';
 import { json } from '@sveltejs/kit';
 
 export const POST = async ({ request, locals }): Promise<Response> => {
 	const session = await locals.auth();
+
+	// ADD WALLET ADDRESS AND ICON URL
 	const { product_name, product_description, product_price, product_price_currency, file_name } =
 		await request.json();
 
@@ -43,4 +46,21 @@ export const POST = async ({ request, locals }): Promise<Response> => {
 	const signedUploadURL = await requestUpload(user_id, file_name);
 
 	return json({ signed_url: signedUploadURL });
+};
+
+export const PATCH = async ({ request, locals }): Promise<Response> => {
+	const session = await locals.auth();
+	const { updated_info } = (await request.json()) as { updated_info: EPInformation };
+
+	if (!session || !session.user?.id) {
+		return new Response('Unauthorized!', { status: 401 });
+	}
+
+	if (!updated_info) {
+		return new Response('Bad request!', { status: 400 });
+	}
+
+	// CHECK FOR DATA AND VALIDATE IT AND THEN UPDATE IT IN THE DATABASE
+
+	return new Response('Updated successfully!', { status: 200 });
 };
