@@ -33,35 +33,33 @@
 	async function save_data(
 		_event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement }
 	) {
-		/*if (!product_info) {
-			product_info = undefined;
-			return;
-		}
-		const edited_product_index = data.relations.findIndex(
-			async (v) => (await v)?.product_id == product_info?.product_id
-		);
-		if (edited_product_index == -1) {
-			product_info = undefined;
-			return;
-		}
-		const edited_product = await data.relations[edited_product_index];
-		if (!edited_product) {
-			product_info = undefined;
-			return;
-		}*/
 		if (!relation || !relation.product || !product_info) return;
 
-		relation.product.name = product_info?.name;
-		relation.product.description = product_info?.description;
-		relation.product.currency = product_info?.currency;
-		relation.product.price = product_info?.price;
-		relation.product.wallet_address = product_info?.wallet_address;
-		relation.product.file_name =
+		product_info.file_name =
 			relation.product.file_name.split('/')[0] + '/' + product_info?.file_name;
-		relation.product.icon_url = product_info?.icon_url;
 
 		//data.relations[edited_product_index] = Promise.resolve(edited_product);
+		push_not("Updating product's information...");
+		const response = await fetch('/dashboard/post', {
+			method: 'PATCH',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(product_info)
+		});
+		if (response.ok && response.status == 200) {
+			push_not('Product information updated successfully!');
 
+			relation.product.name = product_info.name;
+			relation.product.description = product_info.description;
+			relation.product.currency = product_info.currency;
+			relation.product.price = product_info.price;
+			relation.product.wallet_address = product_info.wallet_address;
+			relation.product.file_name = product_info.file_name;
+			relation.product.icon_url = product_info.icon_url;
+		} else {
+			push_not('Could not update product information!');
+		}
 		product_info = undefined;
 	}
 

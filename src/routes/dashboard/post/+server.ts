@@ -60,6 +60,10 @@ export const PATCH = async ({ request, locals }): Promise<Response> => {
 		return new Response('Bad request!', { status: 400 });
 	}
 
+	if (updated_info.price < 0 || updated_info.currency.length > 3) {
+		return new Response('Bad request!', { status: 400 });
+	}
+
 	// CHECK FOR DATA AND VALIDATE IT AND THEN UPDATE IT IN THE DATABASE
 
 	return new Response('Updated successfully!', { status: 200 });
