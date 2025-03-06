@@ -1,6 +1,9 @@
 import { requestUpload } from '$lib/server/cloud_storage/minio_man/upto_bucket';
-import { establishRelationship } from '$lib/server/database/db_man/product_relationships.js';
-import { createProduct } from '$lib/server/database/db_man/products.js';
+import {
+	establishRelationship,
+	getRelationshipsHolderOf
+} from '$lib/server/database/db_man/product_relationships.js';
+import { createProduct, updateProduct } from '$lib/server/database/db_man/products.js';
 import type { EPInformation } from '$lib/types/product';
 import { json } from '@sveltejs/kit';
 
@@ -57,14 +60,31 @@ export const PATCH = async ({ request, locals }): Promise<Response> => {
 	}
 
 	if (!updated_info) {
-		return new Response('Bad request!', { status: 400 });
+		return new Response('No information provided!', { status: 400 });
 	}
 
-	if (updated_info.price < 0 || updated_info.currency.length > 3) {
-		return new Response('Bad request!', { status: 400 });
+	const currentOwnedProducts = await getRelationshipsHolderOf(session.user?.id ?? '');
+	if (
+		!currentOwnedProducts?.relations.find(
+			(rlp) =>
+				rlp.product_id?.toString() == updated_info.product_id && rlp.relationship_type == 'POSTED'
+		)
+	) {
+		return new Response('You do not own this product!', { status: 401 });
 	}
 
-	// CHECK FOR DATA AND VALIDATE IT AND THEN UPDATE IT IN THE DATABASE
+	if (!updated_info.product_id) {
+		return new Response('No product id provided!', { status: 400 });
+	}
+
+	// ADD MORE CHECKS
+	if (isNaN(updated_info.price) || updated_info.price < 0 || updated_info.currency.length > 3) {
+		return new Response('Malformed information.', { status: 400 });
+	}
+
+	updated_info.file_name = session.user?.id + '/' + updated_info.file_name;
+
+	await updateProduct(updated_info.product_id, updated_info);
 
 	return new Response('Updated successfully!', { status: 200 });
 };

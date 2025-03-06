@@ -35,9 +35,6 @@
 	) {
 		if (!relation || !relation.product || !product_info) return;
 
-		product_info.file_name =
-			relation.product.file_name.split('/')[0] + '/' + product_info?.file_name;
-
 		//data.relations[edited_product_index] = Promise.resolve(edited_product);
 		push_not("Updating product's information...");
 		const response = await fetch('/dashboard/post', {
@@ -58,7 +55,7 @@
 			relation.product.file_name = product_info.file_name;
 			relation.product.icon_url = product_info.icon_url;
 		} else {
-			push_not('Could not update product information!');
+			push_not('Could not update product information!, ' + (await response.text()));
 		}
 		product_info = undefined;
 	}
