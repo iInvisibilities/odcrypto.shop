@@ -82,7 +82,16 @@ export const PATCH = async ({ request, locals }): Promise<Response> => {
 		return new Response('Malformed information.', { status: 400 });
 	}
 
-	await updateProduct(updated_info.product_id, updated_info);
+	const safe_info_to_update = {
+		name: updated_info.name,
+		description: updated_info.description,
+		price: updated_info.price,
+		currency: updated_info.currency,
+		icon_url: updated_info.icon_url,
+		wallet_address: updated_info.wallet_address
+	};
+
+	await updateProduct(updated_info.product_id, safe_info_to_update);
 
 	return new Response('Updated successfully!', { status: 200 });
 };
