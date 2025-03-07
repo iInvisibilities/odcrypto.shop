@@ -27,7 +27,6 @@ export type EPInformation = {
 	description: string;
 	price: number;
 	currency: string;
-	file_name: string;
 	icon_url?: string;
 	wallet_address?: string;
 };

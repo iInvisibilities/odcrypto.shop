@@ -52,7 +52,6 @@
 			relation.product.currency = product_info.currency;
 			relation.product.price = product_info.price;
 			relation.product.wallet_address = product_info.wallet_address;
-			relation.product.file_name = product_info.file_name;
 			relation.product.icon_url = product_info.icon_url;
 		} else {
 			push_not('Could not update product information!, ' + (await response.text()));
@@ -126,11 +125,21 @@
 	>
 		{#each Object.keys(product_info).filter((pKey) => pKey != 'product_id') as product_info_type}
 			<label for="name">{product_info_type.replace('_', ' ') + ':'}</label>
-			<input
-				bind:value={product_info[product_info_type as keyof EPInformation]}
-				type="text"
-				name="name"
-			/>
+			{#if product_info_type == 'description'}
+				<textarea
+					bind:value={product_info[product_info_type as keyof EPInformation]}
+					class="border-2 border-gray-500 rounded-md p-1"
+				></textarea>
+			{:else}
+				<input
+					bind:value={product_info[product_info_type as keyof EPInformation]}
+					type={product_info_type == 'price' ? 'number' : 'text'}
+					name="name"
+					placeholder={product_info[product_info_type as keyof EPInformation] == undefined
+						? 'Not set'
+						: ''}
+				/>
+			{/if}
 		{/each}
 		<button
 			onclick={() => (product_info = undefined)}
@@ -202,8 +211,8 @@
 							description: relation.product.description,
 							price: relation.product.price,
 							currency: relation.product.currency,
-							wallet_address: relation.product.wallet_address,
-							file_name: relation.product.file_name.split('/')[1]
+							icon_url: relation.product.icon_url,
+							wallet_address: relation.product.wallet_address
 						});
 					}}
 					class="bg-blue-800 rounded-md w-max p-[.3rem] cursor-pointer hover:scale-95 transition-all active:scale-90 shadow-md mr-1"
