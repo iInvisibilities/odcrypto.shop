@@ -82,7 +82,9 @@ export const PATCH = async ({ request, locals }): Promise<Response> => {
 		return new Response('Malformed information.', { status: 400 });
 	}
 
-	updated_info.file_name = session.user?.id + '/' + updated_info.file_name;
+	if (updated_info.file_name) {
+		updated_info.file_name = session.user?.id + '/' + updated_info.file_name;
+	}
 
 	await updateProduct(updated_info.product_id, updated_info);
 

@@ -42,7 +42,7 @@
 			headers: {
 				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify(product_info)
+			body: JSON.stringify({ updated_info: product_info })
 		});
 		if (response.ok && response.status == 200) {
 			push_not('Product information updated successfully!');
