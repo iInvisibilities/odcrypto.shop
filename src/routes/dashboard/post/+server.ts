@@ -78,8 +78,16 @@ export const PATCH = async ({ request, locals }): Promise<Response> => {
 	}
 
 	// ADD MORE CHECKS
-	if (isNaN(updated_info.price) || updated_info.price < 0 || updated_info.currency.length > 3) {
-		return new Response('Malformed information.', { status: 400 });
+	if (!check_price(updated_info)) {
+		return new Response('Invalid pricing information.', { status: 400 });
+	}
+
+	if (!check_naming(updated_info)) {
+		return new Response('Name or description too long. (32 and 256 characters)', { status: 400 });
+	}
+
+	if (!check_icon_url(updated_info)) {
+		return new Response('Invalid icon URL (must use HTTPS)', { status: 400 });
 	}
 
 	const safe_info_to_update = {
@@ -94,4 +102,23 @@ export const PATCH = async ({ request, locals }): Promise<Response> => {
 	await updateProduct(updated_info.product_id, safe_info_to_update);
 
 	return new Response('Updated successfully!', { status: 200 });
+};
+
+const check_icon_url = (updated_info: EPInformation): boolean => {
+	return (
+		updated_info.icon_url == undefined ||
+		(updated_info.icon_url != undefined &&
+			updated_info.icon_url?.length <= 256 &&
+			updated_info.icon_url.match(
+				'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)'
+			) != null)
+	);
+};
+
+const check_naming = (updated_info: EPInformation): boolean => {
+	return updated_info.name.length <= 32 && updated_info.description.length <= 256;
+};
+
+const check_price = (updated_info: EPInformation): boolean => {
+	return !isNaN(updated_info.price) && updated_info.price > 0 && updated_info.currency.length <= 3;
 };
