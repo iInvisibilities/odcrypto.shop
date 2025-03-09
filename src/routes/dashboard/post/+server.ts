@@ -11,8 +11,14 @@ export const POST = async ({ request, locals }): Promise<Response> => {
 	const session = await locals.auth();
 
 	// ADD WALLET ADDRESS AND ICON URL
-	const { product_name, product_description, product_price, product_price_currency, file_name } =
-		await request.json();
+	const {
+		product_name,
+		product_description,
+		product_price,
+		product_price_currency,
+		file_name,
+		wallet_id
+	} = await request.json();
 
 	if (!session || !session.user?.id) {
 		return new Response('Unauthorized!', { status: 401 });
@@ -24,6 +30,7 @@ export const POST = async ({ request, locals }): Promise<Response> => {
 		!product_price ||
 		!product_price_currency ||
 		!file_name ||
+		!wallet_id ||
 		(<string>product_price_currency).length > 3
 	) {
 		return new Response('Bad request!', { status: 400 });
@@ -37,7 +44,8 @@ export const POST = async ({ request, locals }): Promise<Response> => {
 		price: product_price,
 		currency: product_price_currency,
 		file_name: user_id + '/' + file_name,
-		bought_how_many_times: 0
+		bought_how_many_times: 0,
+		wallet_id: wallet_id
 	});
 
 	await establishRelationship(user_id, {
@@ -96,7 +104,7 @@ export const PATCH = async ({ request, locals }): Promise<Response> => {
 		price: updated_info.price,
 		currency: updated_info.currency,
 		icon_url: updated_info.icon_url,
-		wallet_address: updated_info.wallet_address
+		wallet_id: updated_info.wallet_id
 	};
 
 	await updateProduct(updated_info.product_id, safe_info_to_update);

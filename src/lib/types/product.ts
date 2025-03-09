@@ -9,7 +9,7 @@ export type Product = {
 	file_name: string;
 	bought_how_many_times: number;
 	icon_url?: string;
-	wallet_address?: string;
+	wallet_id: string;
 	deleted?: boolean;
 };
 
@@ -28,10 +28,10 @@ export type EPInformation = {
 	price: number;
 	currency: string;
 	icon_url?: string;
-	wallet_address?: string;
+	wallet_id: string;
 };
 
-export type RelationshipType = 'BOUGHT' | 'POSTED' | 'WISHLISTED';
+export type RelationshipType = 'BOUGHT' | 'POSTED' | 'WISHLISTED' | 'WALLET';
 
 export type ProductRelationship = {
 	relationship_type: RelationshipType;

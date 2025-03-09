@@ -1,22 +1,12 @@
 <script lang="ts">
-	import type { EPInformation } from '$lib/types/product';
+	import type { EPInformation, Product } from '$lib/types/product';
 	import { onMount } from 'svelte';
 
 	let { rlp = $bindable(), current_page, push_not, deleted_product_elements } = $props();
 
 	let relation:
 		| {
-				product: {
-					name: string;
-					description: string;
-					currency: string;
-					price: number;
-					wallet_address: string | undefined;
-					file_name: string;
-					icon_url: string | undefined;
-					_id: string;
-					deleted: any;
-				};
+				product: Product;
 				relationship_type: any;
 				established_at: any;
 		  }
@@ -51,7 +41,7 @@
 			relation.product.description = product_info.description;
 			relation.product.currency = product_info.currency;
 			relation.product.price = product_info.price;
-			relation.product.wallet_address = product_info.wallet_address;
+			relation.product.wallet_id = product_info.wallet_id;
 			relation.product.icon_url = product_info.icon_url;
 		} else {
 			push_not('Could not update product information!, ' + (await response.text()));
@@ -206,13 +196,13 @@
 					onclick={() => {
 						if (!relation) return;
 						open_product_editor({
-							product_id: relation.product._id,
+							product_id: relation.product._id?.toString() ?? '',
 							name: relation.product.name,
 							description: relation.product.description,
 							price: relation.product.price,
 							currency: relation.product.currency,
 							icon_url: relation.product.icon_url,
-							wallet_address: relation.product.wallet_address
+							wallet_id: relation.product.wallet_id
 						});
 					}}
 					class="bg-blue-800 rounded-md w-max p-[.3rem] cursor-pointer hover:scale-95 transition-all active:scale-90 shadow-md mr-1"
