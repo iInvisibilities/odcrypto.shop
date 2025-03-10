@@ -1,9 +1,8 @@
 import { requestDownloadProduct } from '$lib/server/cloud_storage/minio_man/upto_bucket';
 import {
-	deleteAllEstablishedRelationships,
 	deleteEstablishedRelationship,
 	getAllRelationshipsOfType
-} from '$lib/server/database/db_man/product_relationships';
+} from '$lib/server/database/db_man/object_relationships';
 import { getProduct, markAsDeleted } from '$lib/server/database/db_man/products';
 import { text, type RequestHandler } from '@sveltejs/kit';
 
@@ -26,7 +25,7 @@ export const DELETE: RequestHandler = async ({ url, locals }) => {
 		if (
 			!postedProdsOfUser.some(
 				(pred) =>
-					pred.product_id && product._id && pred.product_id.toString() == product._id.toString()
+					pred.object_id && product._id && pred.object_id.toString() == product._id.toString()
 			)
 		) {
 			return new Response('Unauthorized!', { status: 401 });
@@ -63,12 +62,10 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 	if (
 		!boughtProdsOfUser.some(
-			(pred) =>
-				pred.product_id && product._id && pred.product_id.toString() == product._id.toString()
+			(pred) => pred.object_id && product._id && pred.object_id.toString() == product._id.toString()
 		) &&
 		!postedProdsOfUser.some(
-			(pred) =>
-				pred.product_id && product._id && pred.product_id.toString() == product._id.toString()
+			(pred) => pred.object_id && product._id && pred.object_id.toString() == product._id.toString()
 		)
 	)
 		return new Response('Unauthorized!', { status: 401 });

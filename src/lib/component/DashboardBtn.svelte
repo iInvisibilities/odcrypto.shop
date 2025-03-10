@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { RelationshipType } from '$lib/types/product';
+	import type { RelationshipType } from '$lib/types/object_relationships';
 	import { onMount } from 'svelte';
 	import type { MouseEventHandler } from 'svelte/elements';
 

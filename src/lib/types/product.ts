@@ -30,17 +30,3 @@ export type EPInformation = {
 	icon_url?: string;
 	wallet_id: string;
 };
-
-export type RelationshipType = 'BOUGHT' | 'POSTED' | 'WISHLISTED' | 'WALLET';
-
-export type ProductRelationship = {
-	relationship_type: RelationshipType;
-	product_id?: ObjectId;
-	established_at: Date;
-};
-
-export type ProductRelationhipHolder = {
-	_id?: ObjectId;
-	user_id: ObjectId;
-	relations: ProductRelationship[];
-};

@@ -2,8 +2,8 @@
 	import DashboardBtn from '$lib/component/DashboardBtn.svelte';
 	import DashboardCard from '$lib/component/DashboardCard.svelte';
 	import { SignOut } from '@auth/sveltekit/components';
-	import type { RelationshipType } from '$lib/types/product';
 	import type { PageProps } from './$types';
+	import type { RelationshipType } from '$lib/types/object_relationships';
 
 	let { data }: PageProps = $props();
 

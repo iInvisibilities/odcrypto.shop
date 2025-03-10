@@ -2,7 +2,7 @@ import { requestUpload } from '$lib/server/cloud_storage/minio_man/upto_bucket';
 import {
 	establishRelationship,
 	getRelationshipsHolderOf
-} from '$lib/server/database/db_man/product_relationships.js';
+} from '$lib/server/database/db_man/object_relationships';
 import { createProduct, updateProduct } from '$lib/server/database/db_man/products.js';
 import type { EPInformation } from '$lib/types/product';
 import { json } from '@sveltejs/kit';
@@ -49,7 +49,7 @@ export const POST = async ({ request, locals }): Promise<Response> => {
 	});
 
 	await establishRelationship(user_id, {
-		product_id: created_prod._id,
+		object_id: created_prod._id,
 		relationship_type: 'POSTED',
 		established_at: new Date()
 	});
@@ -75,7 +75,7 @@ export const PATCH = async ({ request, locals }): Promise<Response> => {
 	if (
 		!currentOwnedProducts?.relations.find(
 			(rlp) =>
-				rlp.product_id?.toString() == updated_info.product_id && rlp.relationship_type == 'POSTED'
+				rlp.object_id?.toString() == updated_info.product_id && rlp.relationship_type == 'POSTED'
 		)
 	) {
 		return new Response('You do not own this product!', { status: 401 });
