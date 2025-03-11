@@ -13,3 +13,15 @@ export type RelationshipHolder = {
 	user_id: ObjectId;
 	relations: Relationship[];
 };
+
+export type SERRelationshipHolder = {
+	_id?: string;
+	user_id: string;
+	relations: Relationship[];
+};
+
+export type SERRelationship = {
+	relationship_type: RelationshipType;
+	object_id?: string;
+	established_at: Date;
+};

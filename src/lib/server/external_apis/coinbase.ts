@@ -1,4 +1,4 @@
-import type { Product, ProductDAO } from '$lib/types/product.js';
+import type { ProductDAO } from '$lib/types/product.js';
 import { expectTransaction } from '../cache/cache_man/live_transactions';
 
 const coinbase_api_key: string = process.env.COINBASE_API_KEY ?? '';

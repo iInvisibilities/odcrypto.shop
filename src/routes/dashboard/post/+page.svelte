@@ -1,18 +1,27 @@
 <script lang="ts">
+	import type { ProductPost } from '$lib/types/product';
+
 	let files: FileList;
-	let product_name: string, product_description: string, product_price_currency: string;
+	let product_name: string,
+		product_description: string,
+		product_price_currency: string,
+		wallet_id: string,
+		icon_url: string;
 	let product_price: number;
 
 	const requestSignedURL = async (file_name: string): Promise<string | null> => {
+		const product: ProductPost = {
+			name: product_name,
+			description: product_description,
+			price: product_price,
+			currency: product_price_currency,
+			wallet_id,
+			icon_url,
+			file_name
+		};
 		const request = await fetch('/dashboard/post', {
 			method: 'POST',
-			body: JSON.stringify({
-				product_name,
-				product_description,
-				product_price,
-				product_price_currency,
-				file_name
-			})
+			body: JSON.stringify({ product })
 		});
 
 		return request.ok ? (await request.json())['signed_url'] : null;
@@ -48,6 +57,11 @@
 
 	<input type="number" bind:value={product_price} />
 	<input type="text" bind:value={product_price_currency} />
+	<select bind:value={wallet_id}>
+		<option value="some_id1">wallet_id_1</option>
+		<option value="some_id2">wallet_id_2</option>
+	</select>
+	<input type="text" bind:value={icon_url} />
 
 	<input bind:files type="file" />
 

@@ -4,13 +4,14 @@
 	import { SignOut } from '@auth/sveltekit/components';
 	import type { PageProps } from './$types';
 	import type { RelationshipType } from '$lib/types/object_relationships';
+	import type { ObjectId } from 'mongodb';
 
 	let { data }: PageProps = $props();
 
 	let relations_data = $state(data.relations);
 
 	let current_page: RelationshipType | undefined = $state();
-	const deleted_product_elements: string[] = [];
+	const deleted_product_elements: (ObjectId | null)[] = [];
 
 	let last_sel: HTMLElement | undefined = $state();
 

@@ -5,3 +5,9 @@ export type Wallet = {
 	address: string;
 	type: string;
 };
+
+export type SERWallet = {
+	_id?: string;
+	address: string;
+	type: string;
+};

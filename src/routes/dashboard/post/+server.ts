@@ -4,34 +4,28 @@ import {
 	getRelationshipsHolderOf
 } from '$lib/server/database/db_man/object_relationships';
 import { createProduct, updateProduct } from '$lib/server/database/db_man/products.js';
-import type { EPInformation } from '$lib/types/product';
+import type { EPInformation, ProductPost } from '$lib/types/product';
 import { json } from '@sveltejs/kit';
 
 export const POST = async ({ request, locals }): Promise<Response> => {
 	const session = await locals.auth();
 
 	// ADD WALLET ADDRESS AND ICON URL
-	const {
-		product_name,
-		product_description,
-		product_price,
-		product_price_currency,
-		file_name,
-		wallet_id
-	} = await request.json();
+	const { product } = await request.json();
 
 	if (!session || !session.user?.id) {
 		return new Response('Unauthorized!', { status: 401 });
 	}
 
 	if (
-		!product_name ||
-		!product_description ||
-		!product_price ||
-		!product_price_currency ||
-		!file_name ||
-		!wallet_id ||
-		(<string>product_price_currency).length > 3
+		!product.name ||
+		!product.description ||
+		!product.price ||
+		!product.currency ||
+		!product.file_name ||
+		!product.wallet_id ||
+		(<string>product.currency).length > 3 ||
+		(<string>product.currency).length < 0
 	) {
 		return new Response('Bad request!', { status: 400 });
 	}
@@ -39,13 +33,13 @@ export const POST = async ({ request, locals }): Promise<Response> => {
 	const user_id = session.user?.id;
 
 	const created_prod = await createProduct({
-		name: product_name,
-		description: product_description,
-		price: product_price,
-		currency: product_price_currency,
-		file_name: user_id + '/' + file_name,
+		name: product.name,
+		description: product.description,
+		price: product.price,
+		currency: product.currency,
+		file_name: user_id + '/' + product.file_name,
 		bought_how_many_times: 0,
-		wallet_id: wallet_id
+		wallet_id: product.wallet_id
 	});
 
 	await establishRelationship(user_id, {
@@ -54,7 +48,7 @@ export const POST = async ({ request, locals }): Promise<Response> => {
 		established_at: new Date()
 	});
 
-	const signedUploadURL = await requestUpload(user_id, file_name);
+	const signedUploadURL = await requestUpload(user_id, product.file_name);
 
 	return json({ signed_url: signedUploadURL });
 };
