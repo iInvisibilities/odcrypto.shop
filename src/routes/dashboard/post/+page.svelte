@@ -21,7 +21,10 @@
 		};
 		const request = await fetch('/dashboard/post', {
 			method: 'POST',
-			body: JSON.stringify({ product })
+			body: JSON.stringify({ object_type: 'PRODUCT', object: product }),
+			headers: {
+				'Content-Type': 'application/json'
+			}
 		});
 
 		return request.ok ? (await request.json())['signed_url'] : null;

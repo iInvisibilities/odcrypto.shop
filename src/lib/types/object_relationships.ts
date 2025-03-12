@@ -25,3 +25,5 @@ export type SERRelationship = {
 	object_id?: string;
 	established_at: Date;
 };
+
+export type ObjectType = 'PRODUCT' | 'WALLET';

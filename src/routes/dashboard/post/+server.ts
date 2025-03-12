@@ -4,6 +4,7 @@ import {
 	getRelationshipsHolderOf
 } from '$lib/server/database/db_man/object_relationships';
 import { createProduct, updateProduct } from '$lib/server/database/db_man/products.js';
+import { createWalletObj } from '$lib/server/database/db_man/wallets.js';
 import type { EPInformation, ProductPost } from '$lib/types/product';
 import { json } from '@sveltejs/kit';
 
@@ -13,47 +14,69 @@ const URL_REG =
 export const POST = async ({ request, locals }): Promise<Response> => {
 	const session = await locals.auth();
 
-	// ADD WALLET ADDRESS AND ICON URL
-	const { product } = await request.json();
+	const { object_type, object } = await request.json();
 
 	if (!session || !session.user?.id) {
 		return new Response('Unauthorized!', { status: 401 });
 	}
 
-	if (
-		!product.name ||
-		!product.description ||
-		!product.price ||
-		!product.currency ||
-		!product.file_name ||
-		!product.wallet_id ||
-		(<string>product.currency).length > 3 ||
-		(<string>product.currency).length < 0
-	) {
-		return new Response('Bad request!', { status: 400 });
+	if (object_type == 'PRODUCT') {
+		if (
+			!object.name ||
+			!object.description ||
+			!object.price ||
+			!object.currency ||
+			!object.file_name ||
+			!object.wallet_id ||
+			(<string>object.currency).length > 3 ||
+			(<string>object.currency).length < 0
+		) {
+			return new Response('Bad request!', { status: 400 });
+		}
+
+		const user_id = session.user?.id;
+
+		const created_prod = await createProduct({
+			name: object.name,
+			description: object.description,
+			price: object.price,
+			currency: object.currency,
+			file_name: user_id + '/' + object.file_name,
+			bought_how_many_times: 0,
+			wallet_id: object.wallet_id
+		});
+
+		await establishRelationship(user_id, {
+			object_id: created_prod._id,
+			relationship_type: 'POSTED',
+			established_at: new Date()
+		});
+
+		const signedUploadURL = await requestUpload(user_id, object.file_name);
+
+		return json({ signed_url: signedUploadURL });
+	} else if (object_type == 'WALLET') {
+		// ADD MORE CHECKS FOR THE WALLET INFORMATION
+		if (!object.address || !object.type) {
+			return new Response('Bad request!', { status: 400 });
+		}
+		const user_id = session.user?.id;
+
+		const created_wallet = await createWalletObj({
+			address: object.address,
+			type: object.type
+		});
+
+		await establishRelationship(user_id, {
+			object_id: created_wallet._id,
+			relationship_type: 'WALLET',
+			established_at: new Date()
+		});
+
+		return new Response('Wallet created successfully!', { status: 200 });
 	}
 
-	const user_id = session.user?.id;
-
-	const created_prod = await createProduct({
-		name: product.name,
-		description: product.description,
-		price: product.price,
-		currency: product.currency,
-		file_name: user_id + '/' + product.file_name,
-		bought_how_many_times: 0,
-		wallet_id: product.wallet_id
-	});
-
-	await establishRelationship(user_id, {
-		object_id: created_prod._id,
-		relationship_type: 'POSTED',
-		established_at: new Date()
-	});
-
-	const signedUploadURL = await requestUpload(user_id, product.file_name);
-
-	return json({ signed_url: signedUploadURL });
+	return new Response("Couldn't understand object_type!", { status: 400 });
 };
 
 export const PATCH = async ({ request, locals }): Promise<Response> => {
