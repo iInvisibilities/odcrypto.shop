@@ -11,7 +11,7 @@
 	let relations_data = $state(data.relations);
 
 	let current_page: RelationshipType | undefined = $state();
-	const deleted_product_elements: (ObjectId | null)[] = [];
+	const deleted_object_elements: (ObjectId | null)[] = [];
 
 	let last_sel: HTMLElement | undefined = $state();
 
@@ -24,16 +24,9 @@
 		}
 
 		const valAtrr = e.currentTarget?.getAttribute('data-val');
-		if (
-			!valAtrr ||
-			(valAtrr != 'HISTORY' &&
-				valAtrr != 'BOUGHT' &&
-				valAtrr != 'POSTED' &&
-				valAtrr != 'WISHLISTED')
-		)
-			return;
+		if (!valAtrr) return;
 
-		current_page = valAtrr == 'HISTORY' ? undefined : valAtrr;
+		current_page = valAtrr == 'HISTORY' ? undefined : (valAtrr as RelationshipType);
 
 		e.currentTarget?.classList.add('font-bold', 'pointer-events-none');
 		e.currentTarget?.classList.remove('hover:opacity-80');
@@ -72,6 +65,7 @@
 		<DashboardBtn {onclick} onmount={() => {}} src="heart.svg" val="WISHLISTED"
 			>Wishlist</DashboardBtn
 		>
+		<DashboardBtn {onclick} onmount={() => {}} src="wallet.svg" val="WALLET">Wallet</DashboardBtn>
 		<DashboardBtn {onclick} {onmount} src="history-log.svg" val="HISTORY">History</DashboardBtn>
 		<a
 			href="dashboard/post"
@@ -96,13 +90,13 @@
 				<span class="italic">{current_page ? current_page?.toUpperCase() : 'HISTORY'}</span>
 				{#if current_page}
 					<span class="text-sm opacity-50 italic font-extralight select-none"
-						>click on desired product to visit its page</span
+						>click on desired {current_page == 'WALLET' ? 'wallet' : 'product'} to visit its page</span
 					>
 				{/if}
 			</h3>
 			{#each relations_data as _, i}
 				<DashboardCard
-					{deleted_product_elements}
+					{deleted_object_elements}
 					{push_not}
 					bind:rlp={relations_data[i]}
 					{current_page}

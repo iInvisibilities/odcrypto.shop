@@ -3,7 +3,7 @@
 	import type { EPInformation, Product } from '$lib/types/product';
 	import type { Wallet } from '$lib/types/wallet';
 
-	let { rlp = $bindable(), current_page, push_not, deleted_product_elements } = $props();
+	let { rlp = $bindable(), current_page, push_not, deleted_object_elements } = $props();
 
 	let relation: { rlp: Relationship; object: Product | Wallet | null } = $state(rlp);
 
@@ -74,7 +74,7 @@
 							(current_page == 'WISHLISTED' ? ' from your wishlist' : '') +
 							' successfully!'
 					);
-					deleted_product_elements.push(relation.object._id);
+					deleted_object_elements.push(relation.object._id);
 					if (own_dom) own_dom.remove();
 				} else {
 					push_not(
@@ -145,7 +145,7 @@
 	</div>
 {/if}
 
-{#if relation.object && (!current_page || relation.rlp.relationship_type == current_page) && !deleted_product_elements.includes(relation.object._id)}
+{#if relation.object && (!current_page || relation.rlp.relationship_type == current_page) && !deleted_object_elements.includes(relation.object._id)}
 	{#if relation.rlp.relationship_type != 'WALLET'}
 		<div
 			bind:this={own_dom}
@@ -234,5 +234,8 @@
 				>
 			{/if}
 		</div>
+	{:else if relation.rlp.relationship_type == 'WALLET'}
+		<h1>WALLET added @{relation.rlp.established_at}</h1>
+		<!-- TO BE COMPLETED.... -->
 	{/if}
 {/if}

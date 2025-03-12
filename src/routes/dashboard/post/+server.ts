@@ -7,6 +7,9 @@ import { createProduct, updateProduct } from '$lib/server/database/db_man/produc
 import type { EPInformation, ProductPost } from '$lib/types/product';
 import { json } from '@sveltejs/kit';
 
+const URL_REG =
+	/^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/;
+
 export const POST = async ({ request, locals }): Promise<Response> => {
 	const session = await locals.auth();
 
@@ -108,12 +111,10 @@ export const PATCH = async ({ request, locals }): Promise<Response> => {
 
 const check_icon_url = (updated_info: EPInformation): boolean => {
 	return (
-		updated_info.icon_url == undefined ||
-		(updated_info.icon_url != undefined &&
+		!updated_info.icon_url ||
+		(!!updated_info.icon_url &&
 			updated_info.icon_url?.length <= 256 &&
-			updated_info.icon_url.match(
-				'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)'
-			) != null)
+			URL_REG.test(updated_info.icon_url))
 	);
 };
 

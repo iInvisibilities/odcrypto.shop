@@ -28,7 +28,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		if (rlp.relationship_type == 'WALLET') {
 			let wallet_object = await getWallet(rlp.object_id?.toString());
 			object = { ...wallet_object, _id: wallet_object?._id?.toString() } as SERWallet;
-			if (!object) {
+			if (!wallet_object) {
 				await deleteEstablishedRelationship(
 					session.user?.id ?? '',
 					rlp.object_id?.toString(),
@@ -38,7 +38,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		} else {
 			let product_object = await getProduct(rlp.object_id?.toString());
 			object = { ...product_object, _id: product_object?._id?.toString() } as SERProduct;
-			if (!object || (rlp.relationship_type == 'WISHLISTED' && object.deleted)) {
+			if (!product_object || (rlp.relationship_type == 'WISHLISTED' && object.deleted)) {
 				await deleteEstablishedRelationship(
 					session.user?.id ?? '',
 					rlp.object_id?.toString(),
