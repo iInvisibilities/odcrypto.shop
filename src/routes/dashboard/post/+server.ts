@@ -1,3 +1,4 @@
+import { COINBASE_API_KEY } from '$env/static/private';
 import { requestUpload } from '$lib/server/cloud_storage/minio_man/upto_bucket';
 import {
 	establishRelationship,
@@ -56,10 +57,25 @@ export const POST = async ({ request, locals }): Promise<Response> => {
 
 		return json({ signed_url: signedUploadURL });
 	} else if (object_type == 'WALLET') {
-		// ADD MORE CHECKS FOR THE WALLET INFORMATION
+		// ADD MORE CHECKS FOR THE WALLET INFORMATION (TEST FOR ADDRESS)
 		if (!object.address || !object.type) {
 			return new Response('Bad request!', { status: 400 });
 		}
+
+		const currency_type_test = await fetch(
+			'https://api.exchange.coinbase.com/currencies/' + object.type,
+			{
+				headers: {
+					'X-CC-Api-Key': COINBASE_API_KEY
+				}
+			}
+		);
+
+		// SHOW CLIENT ACTUAL VALID CURRENCY TYPE EXAMPLES...
+		if (currency_type_test.status != 200) {
+			return new Response('Invalid currency type!', { status: 400 });
+		}
+
 		const user_id = session.user?.id;
 
 		const created_wallet = await createWalletObj({
