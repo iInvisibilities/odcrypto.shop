@@ -12,7 +12,7 @@ import { json } from '@sveltejs/kit';
 const URL_REG =
 	/^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/;
 
-export const POST = async ({ request, locals }): Promise<Response> => {
+export const POST = async ({ request, locals, fetch }): Promise<Response> => {
 	const session = await locals.auth();
 
 	const { object_type, object } = await request.json();
