@@ -62,7 +62,7 @@
 				push_not('Loading...');
 				relation.object = relation.object as Product;
 				const delRequ = await fetch(
-					'/api?type=' + current_page + '&product_id=' + (relation.object._id?.toString() ?? ''),
+					'/api?type=' + current_page + '&object_id=' + (relation.object._id?.toString() ?? ''),
 					{
 						method: 'DELETE'
 					}
