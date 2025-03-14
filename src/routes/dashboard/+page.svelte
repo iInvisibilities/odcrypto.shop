@@ -65,7 +65,7 @@
 		<DashboardBtn {onclick} onmount={() => {}} src="heart.svg" val="WISHLISTED"
 			>Wishlist</DashboardBtn
 		>
-		<DashboardBtn {onclick} onmount={() => {}} src="wallet.svg" val="WALLET">Wallet</DashboardBtn>
+		<DashboardBtn {onclick} onmount={() => {}} src="wallet.svg" val="WALLET">Wallets</DashboardBtn>
 		<DashboardBtn {onclick} {onmount} src="history-log.svg" val="HISTORY">History</DashboardBtn>
 		<a
 			href="dashboard/post"
@@ -84,16 +84,28 @@
 		{#if !relations_data || relations_data.length == 0}
 			Empty!
 		{:else}
-			<h3
-				class="text-lg font-bold text-gray-900 dark:text-white mb-2 flex justify-between xl:justify-start items-center gap-2"
-			>
-				<span class="italic">{current_page ? current_page?.toUpperCase() : 'HISTORY'}</span>
-				{#if current_page}
-					<span class="text-sm opacity-50 italic font-extralight select-none"
-						>click on desired {current_page == 'WALLET' ? 'wallet' : 'product'} to visit its page</span
-					>
+			<div class="flex w-full justify-between items-center flex-wrap gap-2">
+				<h3
+					class="text-lg font-bold text-gray-900 dark:text-white mb-2 flex justify-between xl:justify-start items-end gap-2"
+				>
+					<span class="italic text-2xl">{last_sel?.textContent}</span>
+					{#if current_page}
+						<span class="hidden md:block text-sm opacity-50 italic font-extralight select-none"
+							>click on desired {current_page == 'WALLET' ? 'wallet' : 'product'} to visit its page</span
+						>
+					{/if}
+				</h3>
+
+				{#if current_page == 'WALLET'}
+					<div class="text-md md:text-xl">
+						<button
+							class="cursor-pointer flex items-center gap-2 text-white bg-green-600 p-0.5 md:p-1 shadow-md hover:shadow-lg hover:scale-95 transition-all active:scale-90"
+							><img class="w-8 invert" src="wallet-plus.svg" alt="" />link new wallet</button
+						>
+					</div>
 				{/if}
-			</h3>
+			</div>
+
 			{#each relations_data as _, i}
 				<DashboardCard
 					{deleted_object_elements}
