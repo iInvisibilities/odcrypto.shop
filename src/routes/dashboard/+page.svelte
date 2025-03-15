@@ -3,8 +3,13 @@
 	import DashboardCard from '$lib/component/DashboardCard.svelte';
 	import { SignOut } from '@auth/sveltekit/components';
 	import type { PageProps } from './$types';
-	import type { RelationshipType } from '$lib/types/object_relationships';
+	import type {
+		Relationship,
+		RelationshipType,
+		SERRelationship
+	} from '$lib/types/object_relationships';
 	import type { ObjectId } from 'mongodb';
+	import type { SERWallet, Wallet } from '$lib/types/wallet';
 
 	let { data }: PageProps = $props();
 
@@ -49,7 +54,55 @@
 		btn.classList.remove('hover:opacity-80');
 		last_sel = btn;
 	};
+
+	let is_adding_wallet = $state(false);
+	let coin_symbol: string = $state(''),
+		wallet_address: string = $state('');
+
+	async function try_submit_new_wallet() {
+		is_adding_wallet = false;
+		push_not('Please wait...');
+
+		const request = await fetch('/dashboard/post', {
+			method: 'POST',
+			body: JSON.stringify({
+				object_type: 'WALLET',
+				object: { address: wallet_address, type: coin_symbol }
+			}),
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		});
+
+		if (request.status == 200) {
+			push_not('Wallet linked successfully!');
+			const new_wallet = await request.json();
+			const wallet: SERWallet = {
+				_id: new_wallet._id,
+				address: wallet_address,
+				type: coin_symbol
+			};
+
+			relations_data.push({ rlp: new_wallet.serializable_established_rlp, object: wallet });
+		} else {
+			push_not('Could not link wallet, ' + (await request.text()));
+		}
+
+		coin_symbol = '';
+		wallet_address = '';
+	}
 </script>
+
+{#if is_adding_wallet}
+	<div
+		class="grid p-1 absolute inset-0 h-max w-max m-auto bg-white *:h-max *:w-max shadow-lg border-2"
+	>
+		<input bind:value={coin_symbol} type="text" placeholder="Coin symbol (BTC, ETH, etc...)" />
+		<input bind:value={wallet_address} type="text" placeholder="Wallet address" />
+		<button onclick={try_submit_new_wallet}>Link</button>
+		<button onclick={() => (is_adding_wallet = false)}>Cancel</button>
+	</div>
+{/if}
 
 <div class="notification" contenteditable="false" bind:this={push_not_el}></div>
 <div class="md:flex Coinbase min-h-dvh">
@@ -99,6 +152,7 @@
 				{#if current_page == 'WALLET'}
 					<div class="text-md md:text-xl">
 						<button
+							onclick={() => (is_adding_wallet = true)}
 							class="cursor-pointer flex items-center gap-2 text-white bg-green-600 p-0.5 md:p-1 shadow-md hover:shadow-lg hover:scale-95 transition-all active:scale-90"
 							><img class="w-8 invert" src="wallet-plus.svg" alt="" />link new wallet</button
 						>

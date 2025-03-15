@@ -6,6 +6,7 @@ import {
 } from '$lib/server/database/db_man/object_relationships';
 import { createProduct, updateProduct } from '$lib/server/database/db_man/products.js';
 import { createWalletObj } from '$lib/server/database/db_man/wallets.js';
+import type { Relationship, SERRelationship } from '$lib/types/object_relationships.js';
 import type { EPInformation, ProductPost } from '$lib/types/product';
 import { json } from '@sveltejs/kit';
 
@@ -83,13 +84,20 @@ export const POST = async ({ request, locals, fetch }): Promise<Response> => {
 			type: object.type
 		});
 
-		await establishRelationship(user_id, {
+		const newly_established_rlp: Relationship = {
 			object_id: created_wallet._id,
 			relationship_type: 'WALLET',
 			established_at: new Date()
-		});
+		};
+		await establishRelationship(user_id, newly_established_rlp);
 
-		return new Response('Wallet created successfully!', { status: 200 });
+		const serializable_established_rlp: SERRelationship = {
+			object_id: created_wallet._id?.toString() ?? '',
+			relationship_type: 'WALLET',
+			established_at: newly_established_rlp.established_at
+		};
+
+		return json({ serializable_established_rlp, wallet_id: created_wallet._id?.toString() ?? '' });
 	}
 
 	return new Response("Couldn't understand object_type!", { status: 400 });
