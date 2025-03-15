@@ -94,13 +94,31 @@
 </script>
 
 {#if is_adding_wallet}
-	<div
-		class="grid p-1 absolute inset-0 h-max w-max m-auto bg-white *:h-max *:w-max shadow-lg border-2"
-	>
-		<input bind:value={coin_symbol} type="text" placeholder="Coin symbol (BTC, ETH, etc...)" />
-		<input bind:value={wallet_address} type="text" placeholder="Wallet address" />
-		<button onclick={try_submit_new_wallet}>Link</button>
-		<button onclick={() => (is_adding_wallet = false)}>Cancel</button>
+	<div class="z-20 absolute h-dvh w-dvw text-xl grid items-center justify-center backdrop_eff">
+		<div class="grid gap-2 shadow-lg rounded-md *:h-max *:w-max bg-white p-4 backdrop_eff_2">
+			<div class="flex items-center gap-1 w-full">
+				<img src="coin.svg" class="w-6 select-none pointer-events-none" alt="" />
+				<input
+					bind:value={coin_symbol}
+					type="text"
+					class="py-1 px-2 uppercase placeholder:capitalize border-2 border-gray-400 rounded-md outline-none"
+					placeholder="Coin symbol (BTC, ETH, etc...)"
+				/>
+			</div>
+			<div class="flex items-center gap-1 w-full justify-end">
+				<img src="wallet.svg" class="w-6 select-none pointer-events-none" alt="" />
+				<input
+					bind:value={wallet_address}
+					class="py-1 px-2 border-2 rounded-md border-gray-400 outline-none"
+					type="text"
+					placeholder="Wallet address"
+				/>
+			</div>
+			<div class="flex gap-2 items-center justify-end w-full *:py-1 *:px-3 text-white mt-3">
+				<button class="bg-[#33D473]" onclick={try_submit_new_wallet}>Link</button>
+				<button class="bg-[#FC565E]" onclick={() => (is_adding_wallet = false)}>Cancel</button>
+			</div>
+		</div>
 	</div>
 {/if}
 
@@ -153,21 +171,22 @@
 					<div class="text-md md:text-xl">
 						<button
 							onclick={() => (is_adding_wallet = true)}
-							class="cursor-pointer flex items-center gap-2 text-white bg-green-600 p-0.5 md:p-1 shadow-md hover:shadow-lg hover:scale-95 transition-all active:scale-90"
+							class="cursor-pointer rounded-md flex items-center gap-2 text-white bg-green-600 p-0.5 md:p-1 shadow-md hover:shadow-lg hover:scale-95 transition-all active:scale-90"
 							><img class="w-8 invert" src="wallet-plus.svg" alt="" />link new wallet</button
 						>
 					</div>
 				{/if}
 			</div>
-
-			{#each relations_data as _, i}
-				<DashboardCard
-					{deleted_object_elements}
-					{push_not}
-					bind:rlp={relations_data[i]}
-					{current_page}
-				/>
-			{/each}
+			<div class={current_page == 'WALLET' ? 'mt-4' : ''}>
+				{#each relations_data as _, i}
+					<DashboardCard
+						{deleted_object_elements}
+						{push_not}
+						bind:rlp={relations_data[i]}
+						{current_page}
+					/>
+				{/each}
+			</div>
 		{/if}
 	</div>
 </div>

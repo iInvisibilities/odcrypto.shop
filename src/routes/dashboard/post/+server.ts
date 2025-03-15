@@ -81,7 +81,7 @@ export const POST = async ({ request, locals, fetch }): Promise<Response> => {
 
 		const created_wallet = await createWalletObj({
 			address: object.address,
-			type: object.type
+			type: (object.type as String).toUpperCase()
 		});
 
 		const newly_established_rlp: Relationship = {

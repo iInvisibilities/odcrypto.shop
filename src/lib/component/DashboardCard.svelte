@@ -235,7 +235,18 @@
 			{/if}
 		</div>
 	{:else if relation.rlp.relationship_type == 'WALLET'}
-		<h1>WALLET added @{relation.rlp.established_at}</h1>
-		<!-- TO BE COMPLETED.... -->
+		<div
+			class="text-white xl:w-2/3 bg-gray-900 rounded-lg flex flex-wrap overflow-auto items-center justify-start gap-2 p-2 mx-2 shadow-lg my-1"
+		>
+			<span class="bg-gray-700 text-white p-1 rounded-md shadow-sm select-none"
+				>{(relation.object as Wallet).type.toUpperCase()}{current_page == undefined
+					? ' wallet linked'
+					: ''}</span
+			>
+			<span>{(relation.object as Wallet).address}</span>
+			<span class="opacity-75 md:text-sm text-xs min-w-max mx-2 select-none"
+				>@ {relation.rlp.established_at}</span
+			>
+		</div>
 	{/if}
 {/if}

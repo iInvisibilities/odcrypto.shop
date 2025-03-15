@@ -38,3 +38,34 @@
 		translate: transformY(350px);
 	}
 }
+
+@keyframes showoff {
+	from {
+		backdrop-filter: blur(0px);
+	}
+	to {
+		backdrop-filter: blur(10px) brightness(1.1);
+	}
+}
+
+@keyframes showoff2 {
+	0% {
+		opacity: 0;
+		scale: 85%;
+	}
+	50% {
+		scale: 105%;
+	}
+	100% {
+		opacity: 100%;
+		scale: 100%;
+	}
+}
+
+.backdrop_eff {
+	animation: showoff 0.1s ease-in forwards;
+}
+
+.backdrop_eff_2 {
+	animation: showoff2 0.2s ease-out forwards;
+}
