@@ -3,20 +3,15 @@
 	import DashboardCard from '$lib/component/DashboardCard.svelte';
 	import { SignOut } from '@auth/sveltekit/components';
 	import type { PageProps } from './$types';
-	import type {
-		Relationship,
-		RelationshipType,
-		SERRelationship
-	} from '$lib/types/object_relationships';
-	import type { ObjectId } from 'mongodb';
-	import type { SERWallet, Wallet } from '$lib/types/wallet';
+	import type { RelationshipType, SERRelationship } from '$lib/types/object_relationships';
+	import type { SERWallet } from '$lib/types/wallet';
 
 	let { data }: PageProps = $props();
 
 	let relations_data = $state(data.relations);
 
 	let current_page: RelationshipType | undefined = $state();
-	const deleted_object_elements: (ObjectId | null)[] = [];
+	const deleted_object_elements: (string | null)[] = [];
 
 	let last_sel: HTMLElement | undefined = $state();
 
@@ -83,7 +78,12 @@
 				type: coin_symbol
 			};
 
-			relations_data.push({ rlp: new_wallet.serializable_established_rlp, object: wallet });
+			relations_data.push(
+				Promise.resolve({
+					rlp: new_wallet.serializable_established_rlp as SERRelationship,
+					object: wallet
+				})
+			);
 		} else {
 			push_not('Could not link wallet, ' + (await request.text()));
 		}

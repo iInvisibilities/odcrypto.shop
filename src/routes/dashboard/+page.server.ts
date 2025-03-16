@@ -20,37 +20,38 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const user_object_relationships = await getRelationshipsHolderOf(session.user?.id ?? '');
 	if (!user_object_relationships) return { relations: [] };
-	let relations: { rlp: SERRelationship; object: SERProduct | SERWallet | null }[] = [];
-	user_object_relationships.relations.forEach(async (rlp) => {
-		if (!rlp.object_id) return null;
 
-		let object: SERProduct | SERWallet | null = null;
-		if (rlp.relationship_type == 'WALLET') {
-			let wallet_object = await getWallet(rlp.object_id?.toString());
-			object = { ...wallet_object, _id: wallet_object?._id?.toString() } as SERWallet;
-			if (!wallet_object) {
-				await deleteEstablishedRelationship(
-					session.user?.id ?? '',
-					rlp.object_id?.toString(),
-					rlp.relationship_type
-				);
-			}
-		} else {
-			let product_object = await getProduct(rlp.object_id?.toString());
-			object = { ...product_object, _id: product_object?._id?.toString() } as SERProduct;
-			if (!product_object || (rlp.relationship_type == 'WISHLISTED' && object.deleted)) {
-				await deleteEstablishedRelationship(
-					session.user?.id ?? '',
-					rlp.object_id?.toString(),
-					rlp.relationship_type
-				);
-			}
-		}
+	return {
+		relations: user_object_relationships.relations.map(async (rlp) => {
+			if (!rlp.object_id) return null;
 
-		relations.push({
-			rlp: { ...rlp, object_id: rlp.object_id.toString() } as SERRelationship,
-			object
-		});
-	});
-	return { relations };
+			let object: SERProduct | SERWallet | null;
+			if (rlp.relationship_type == 'WALLET') {
+				let wallet_object = await getWallet(rlp.object_id?.toString());
+				object = { ...wallet_object, _id: wallet_object?._id?.toString() } as SERWallet;
+				if (!wallet_object) {
+					await deleteEstablishedRelationship(
+						session.user?.id ?? '',
+						rlp.object_id?.toString() ?? '',
+						rlp.relationship_type
+					);
+				}
+			} else {
+				let product_object = await getProduct(rlp.object_id?.toString());
+				object = { ...product_object, _id: product_object?._id?.toString() } as SERProduct;
+				if (!product_object || (rlp.relationship_type == 'WISHLISTED' && object.deleted)) {
+					await deleteEstablishedRelationship(
+						session.user?.id ?? '',
+						rlp.object_id?.toString() ?? '',
+						rlp.relationship_type
+					);
+				}
+			}
+
+			return {
+				rlp: { ...rlp, object_id: rlp.object_id.toString() } as SERRelationship,
+				object: object as SERProduct | SERWallet
+			};
+		})
+	};
 };
