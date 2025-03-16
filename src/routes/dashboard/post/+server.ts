@@ -72,9 +72,16 @@ export const POST = async ({ request, locals, fetch }): Promise<Response> => {
 			}
 		);
 
-		// SHOW CLIENT ACTUAL VALID CURRENCY TYPE EXAMPLES...
 		if (currency_type_test.status != 200) {
 			return new Response('Invalid currency type!', { status: 400 });
+		}
+
+		const crypto_address_test = await fetch(
+			'https://api.checkcryptoaddress.com/addresses/' + object.address
+		);
+		const response = await crypto_address_test.json();
+		if (response.networks.length == 0) {
+			return new Response('Invalid address!', { status: 400 });
 		}
 
 		const user_id = session.user?.id;
