@@ -129,6 +129,24 @@
 
 		window.open(await requestDownload.text(), '_blank');
 	}
+
+	async function delete_wallet(_: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement }) {
+		if (!relation || relation instanceof Promise) return;
+		if (!confirm('Are you sure?')) return;
+
+		const del_request = await fetch(
+			'/api?is_wallet=true&object_id=' + (relation.object._id ?? ''),
+			{
+				method: 'DELETE'
+			}
+		);
+
+		if (del_request.status == 200) {
+			push_not((relation.object as SERWallet).type + ' wallet deleted successfully!');
+			deleted_object_elements.push(relation.object._id ?? null);
+			if (own_dom) own_dom.remove();
+		} else push_not('Could not delete wallet!');
+	}
 </script>
 
 {#if product_info}
@@ -266,17 +284,37 @@
 			</div>
 		{:else if relation.rlp.relationship_type == 'WALLET'}
 			<div
-				class="text-white xl:w-2/3 bg-gray-900 rounded-lg flex flex-wrap overflow-auto items-center justify-start gap-2 p-2 mx-2 shadow-lg my-1"
+				bind:this={own_dom}
+				class="text-white xl:w-2/3 bg-gray-900 rounded-lg flex flex-wrap overflow-auto items-center justify-between gap-2 p-2 mx-2 shadow-lg my-1"
 			>
-				<span class="bg-gray-700 text-white p-1 rounded-md shadow-sm select-none"
-					>{(relation.object as Wallet).type.toUpperCase()}{current_page == undefined
-						? ' wallet linked'
-						: ''}</span
-				>
-				<span>{(relation.object as Wallet).address}</span>
-				<span class="opacity-75 md:text-sm text-xs min-w-max mx-2 select-none"
-					>@ {relation.rlp.established_at}</span
-				>
+				<div class="flex gap-2 items-center justify-start flex-wrap">
+					<span class="bg-gray-700 text-white p-1 rounded-md shadow-sm select-none"
+						>{(relation.object as Wallet).type.toUpperCase()}{current_page == undefined
+							? ' wallet linked'
+							: ''}</span
+					>
+					{#if current_page == 'WALLET'}
+						<button
+							onclick={delete_wallet}
+							class="block md:hidden bg-[#FC565E] rounded-md w-max p-[.3rem] cursor-pointer hover:scale-95 transition-all active:scale-90 shadow-md"
+						>
+							<img src="delete.svg" class="w-5 invert" alt="" /></button
+						>
+					{/if}
+					<span>{(relation.object as Wallet).address}</span>
+					<span class="opacity-75 md:text-sm text-xs min-w-max mx-2 select-none"
+						>@ {relation.rlp.established_at}</span
+					>
+				</div>
+
+				{#if current_page == 'WALLET'}
+					<button
+						onclick={delete_wallet}
+						class="hidden md:block bg-[#FC565E] rounded-md w-max p-[.3rem] cursor-pointer hover:scale-95 transition-all active:scale-90 shadow-md"
+					>
+						<img src="delete.svg" class="w-5 invert" alt="" /></button
+					>
+				{/if}
 			</div>
 		{/if}
 	{/if}
