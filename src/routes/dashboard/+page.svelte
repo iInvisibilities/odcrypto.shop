@@ -153,7 +153,17 @@
 	</ul>
 	<div class="p-6 bg-gray-50 text-medium text-gray-500 dark:text-gray-400 dark:bg-gray-800 w-full">
 		{#if !relations_data || relations_data.length == 0}
-			Empty!
+			{#if current_page == 'WALLET'}
+				<div class="text-md md:text-xl">
+					<button
+						onclick={() => (is_adding_wallet = true)}
+						class="cursor-pointer rounded-md flex items-center gap-2 text-white bg-green-600 p-0.5 md:p-1 shadow-md hover:shadow-lg hover:scale-95 transition-all active:scale-90"
+						><img class="w-8 invert" src="wallet-plus.svg" alt="" />link new wallet</button
+					>
+				</div>
+			{:else}
+				Empty!
+			{/if}
 		{:else}
 			<div class="flex w-full justify-between items-center flex-wrap gap-2">
 				<h3

@@ -13,18 +13,7 @@ export type Product = {
 	deleted?: boolean;
 };
 
-export type SERProduct = {
-	_id?: string;
-	name: string;
-	description: string;
-	price: number;
-	currency: string;
-	file_name: string;
-	bought_how_many_times: number;
-	icon_url?: string;
-	wallet_id: string;
-	deleted?: boolean;
-};
+export type SERProduct = Product & { _id: string };
 
 export type ProductPost = {
 	name: string;
@@ -42,6 +31,7 @@ export type ProductDAO = {
 	description: string;
 	price: number;
 	currency: string;
+	wallet_id: string;
 };
 
 export type EPInformation = {

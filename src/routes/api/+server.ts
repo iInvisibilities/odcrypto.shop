@@ -4,8 +4,9 @@ import {
 	getAllRelationshipsOfType
 } from '$lib/server/database/db_man/object_relationships';
 import { getProduct, markAsDeleted } from '$lib/server/database/db_man/products';
-import { deleteWallet } from '$lib/server/database/db_man/wallets';
-import { text, type RequestHandler } from '@sveltejs/kit';
+import { deleteWallet, getWallet } from '$lib/server/database/db_man/wallets';
+import type { SERWallet } from '$lib/types/wallet';
+import { json, text, type RequestHandler } from '@sveltejs/kit';
 
 export const DELETE: RequestHandler = async ({ url, locals }) => {
 	const auth = await locals.auth();
@@ -59,25 +60,53 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 	if (!user_id) return new Response('Unauthorized!', { status: 401 });
 
-	const product_id = url.searchParams.get('product_id');
+	const is_wallet = url.searchParams.get('is_wallet');
+	if (!is_wallet) {
+		const product_id = url.searchParams.get('product_id');
 
-	if (!product_id) return new Response('Bad request!', { status: 400 });
-	const product = await getProduct(product_id);
-	if (!product) return new Response('Bad request!', { status: 400 });
-	const boughtProdsOfUser = await getAllRelationshipsOfType(user_id, 'BOUGHT');
-	const postedProdsOfUser = await getAllRelationshipsOfType(user_id, 'POSTED');
+		if (!product_id) return new Response('Bad request!', { status: 400 });
+		const product = await getProduct(product_id);
+		if (!product) return new Response('Bad request!', { status: 400 });
+		const boughtProdsOfUser = await getAllRelationshipsOfType(user_id, 'BOUGHT');
+		const postedProdsOfUser = await getAllRelationshipsOfType(user_id, 'POSTED');
 
-	if (
-		!boughtProdsOfUser.some(
-			(pred) => pred.object_id && product._id && pred.object_id.toString() == product._id.toString()
-		) &&
-		!postedProdsOfUser.some(
-			(pred) => pred.object_id && product._id && pred.object_id.toString() == product._id.toString()
+		if (
+			!boughtProdsOfUser.some(
+				(pred) =>
+					pred.object_id && product._id && pred.object_id.toString() == product._id.toString()
+			) &&
+			!postedProdsOfUser.some(
+				(pred) =>
+					pred.object_id && product._id && pred.object_id.toString() == product._id.toString()
+			)
 		)
-	)
-		return new Response('Unauthorized!', { status: 401 });
+			return new Response('Unauthorized!', { status: 401 });
 
-	const downloadURL: string = await requestDownloadProduct(product.file_name);
+		const downloadURL: string = await requestDownloadProduct(product.file_name);
 
-	return text(downloadURL);
+		return text(downloadURL);
+	} else {
+		/*const wallet_id = url.searchParams.get('wallet_id');
+
+		if (!wallet_id) return new Response('Bad request!', { status: 400 });*/
+
+		const user_wallets: SERWallet[] = [];
+		const createdWalletsByUser = await getAllRelationshipsOfType(user_id, 'WALLET');
+		createdWalletsByUser.forEach(async (rlp) => {
+			const wallet = await getWallet(rlp.object_id?.toString() ?? '');
+			if (wallet != null)
+				user_wallets.push({ ...wallet, _id: wallet._id?.toString() ?? '' } as SERWallet);
+		});
+
+		/*if (!wallet) return new Response('Bad request!', { status: 400 });*/
+
+		/*if (
+			!createdWalletsByUser.some(
+				(pred) => pred.object_id && wallet._id && pred.object_id.toString() == wallet._id.toString()
+			)
+		)
+			return new Response('Unauthorized!', { status: 401 });*/
+
+		return json({ my_wallets: user_wallets });
+	}
 };

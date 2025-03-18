@@ -1,5 +1,7 @@
 <script lang="ts">
 	import type { ProductPost } from '$lib/types/product';
+	import type { SERWallet } from '$lib/types/wallet';
+	import { onMount } from 'svelte';
 
 	let files: FileList;
 	let product_name: string,
@@ -8,6 +10,8 @@
 		wallet_id: string,
 		icon_url: string;
 	let product_price: number;
+
+	let wallets: SERWallet[] = [];
 
 	const requestSignedURL = async (file_name: string): Promise<string | null> => {
 		const product: ProductPost = {
@@ -52,6 +56,18 @@
 			// SUCCESS
 		}
 	};
+
+	const fetchAllWalletOptions = async () => {
+		const request = await fetch('/api?is_wallet=true', {
+			method: 'GET'
+		});
+
+		if (request.ok) {
+			wallets = (await request.json()).my_wallets;
+		}
+	};
+
+	onMount(fetchAllWalletOptions);
 </script>
 
 <form>
@@ -61,8 +77,9 @@
 	<input type="number" bind:value={product_price} />
 	<input type="text" bind:value={product_price_currency} />
 	<select bind:value={wallet_id}>
-		<option value="some_id1">wallet_id_1</option>
-		<option value="some_id2">wallet_id_2</option>
+		{#each wallets as wallet}
+			<option value={wallet._id}>({wallet.type}){wallet.address}</option>
+		{/each}
 	</select>
 	<input type="text" bind:value={icon_url} />
 

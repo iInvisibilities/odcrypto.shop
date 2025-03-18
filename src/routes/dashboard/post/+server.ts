@@ -76,13 +76,14 @@ export const POST = async ({ request, locals, fetch }): Promise<Response> => {
 			return new Response('Invalid currency type!', { status: 400 });
 		}
 
-		const crypto_address_test = await fetch(
+		// CHANGE API TO A MORE RELIABLE ONE
+		/*const crypto_address_test = await fetch(
 			'https://api.checkcryptoaddress.com/addresses/' + object.address
 		);
 		const response = await crypto_address_test.json();
 		if (response.networks.length == 0) {
 			return new Response('Invalid address!', { status: 400 });
-		}
+		}*/
 
 		const user_id = session.user?.id;
 
