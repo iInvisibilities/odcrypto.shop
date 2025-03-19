@@ -5,6 +5,7 @@
 	import type { PageProps } from './$types';
 	import type { RelationshipType, SERRelationship } from '$lib/types/object_relationships';
 	import type { SERWallet } from '$lib/types/wallet';
+	import { onMount } from 'svelte';
 
 	let { data }: PageProps = $props();
 
@@ -54,6 +55,8 @@
 	let coin_symbol: string = $state(''),
 		wallet_address: string = $state('');
 
+	let wallets: SERWallet[] = $state([]);
+
 	async function try_submit_new_wallet() {
 		is_adding_wallet = false;
 		push_not('Please wait...');
@@ -91,6 +94,18 @@
 		coin_symbol = '';
 		wallet_address = '';
 	}
+
+	const fetchAllWalletOptions = async () => {
+		const request = await fetch('/api?is_wallet=true', {
+			method: 'GET'
+		});
+
+		if (request.ok) {
+			wallets = (await request.json()).my_wallets;
+		}
+	};
+
+	onMount(fetchAllWalletOptions);
 </script>
 
 {#if is_adding_wallet}
@@ -194,6 +209,7 @@
 						{push_not}
 						bind:rlp={relations_data[i]}
 						{current_page}
+						{wallets}
 					/>
 				{/each}
 			</div>

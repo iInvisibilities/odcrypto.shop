@@ -78,7 +78,7 @@
 	<input type="text" bind:value={product_price_currency} />
 	<select bind:value={wallet_id}>
 		{#each wallets as wallet}
-			<option value={wallet._id}>({wallet.type}){wallet.address}</option>
+			<option value={wallet._id}>({wallet.type}) {wallet.address}</option>
 		{/each}
 	</select>
 	<input type="text" bind:value={icon_url} />

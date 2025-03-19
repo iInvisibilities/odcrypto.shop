@@ -8,7 +8,8 @@
 		rlp = $bindable(),
 		current_page,
 		push_not,
-		deleted_object_elements
+		deleted_object_elements,
+		wallets = $bindable([])
 	}: {
 		rlp: Promise<{
 			rlp: SERRelationship;
@@ -17,6 +18,7 @@
 		current_page: string | undefined;
 		push_not: (msg: string) => void;
 		deleted_object_elements: (string | null)[];
+		wallets: SERWallet[];
 	} = $props();
 
 	let relation:
@@ -161,6 +163,12 @@
 					bind:value={product_info[product_info_type as keyof EPInformation]}
 					class="border-2 border-gray-500 rounded-md p-1"
 				></textarea>
+			{:else if product_info_type == 'wallet_id'}
+				<select bind:value={product_info[product_info_type as keyof EPInformation]}>
+					{#each wallets as wallet}
+						<option value={wallet._id}>({wallet.type}) {wallet.address}</option>
+					{/each}
+				</select>
 			{:else}
 				<input
 					bind:value={product_info[product_info_type as keyof EPInformation]}

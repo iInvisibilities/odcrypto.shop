@@ -90,13 +90,14 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 		if (!wallet_id) return new Response('Bad request!', { status: 400 });*/
 
-		const user_wallets: SERWallet[] = [];
+		let user_wallets: SERWallet[] = [];
 		const createdWalletsByUser = await getAllRelationshipsOfType(user_id, 'WALLET');
-		createdWalletsByUser.forEach(async (rlp) => {
+		for (const createdWallet in createdWalletsByUser) {
+			const rlp = createdWalletsByUser[createdWallet];
 			const wallet = await getWallet(rlp.object_id?.toString() ?? '');
 			if (wallet != null)
 				user_wallets.push({ ...wallet, _id: wallet._id?.toString() ?? '' } as SERWallet);
-		});
+		}
 
 		/*if (!wallet) return new Response('Bad request!', { status: 400 });*/
 
