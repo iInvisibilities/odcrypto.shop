@@ -5,7 +5,7 @@ import {
 	getRelationshipsHolderOf
 } from '$lib/server/database/db_man/object_relationships';
 import { createProduct, updateProduct } from '$lib/server/database/db_man/products.js';
-import { createWalletObj } from '$lib/server/database/db_man/wallets.js';
+import { createWalletObj, getWallet } from '$lib/server/database/db_man/wallets.js';
 import type { Relationship, SERRelationship } from '$lib/types/object_relationships.js';
 import type { EPInformation, ProductPost } from '$lib/types/product';
 import { json } from '@sveltejs/kit';
@@ -150,6 +150,10 @@ export const PATCH = async ({ request, locals }): Promise<Response> => {
 		return new Response('Invalid icon URL (must use HTTPS)', { status: 400 });
 	}
 
+	if (!(await check_wallet_address(updated_info))) {
+		return new Response('Invalid wallet address.', { status: 400 });
+	}
+
 	const safe_info_to_update = {
 		name: updated_info.name,
 		description: updated_info.description,
@@ -179,4 +183,12 @@ const check_naming = (updated_info: EPInformation): boolean => {
 
 const check_price = (updated_info: EPInformation): boolean => {
 	return !isNaN(updated_info.price) && updated_info.price > 0 && updated_info.currency.length <= 3;
+};
+
+const check_wallet_address = async (updated_info: EPInformation): Promise<boolean> => {
+	if (!updated_info.wallet_id) return false;
+
+	const supposedWallet = await getWallet(updated_info.wallet_id);
+
+	return supposedWallet != null;
 };

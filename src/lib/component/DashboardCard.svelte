@@ -160,13 +160,16 @@
 			<label for="name">{product_info_type.replace('_', ' ') + ':'}</label>
 			{#if product_info_type == 'description'}
 				<textarea
-					bind:value={product_info[product_info_type as keyof EPInformation]}
+					bind:value={product_info['description']}
 					class="border-2 border-gray-500 rounded-md p-1"
 				></textarea>
 			{:else if product_info_type == 'wallet_id'}
-				<select bind:value={product_info[product_info_type as keyof EPInformation]}>
+				<select bind:value={product_info['wallet_id']}>
 					{#each wallets as wallet}
-						<option value={wallet._id}>({wallet.type}) {wallet.address}</option>
+						<option
+							selected={product_info['wallet_id'] == wallet._id ? true : undefined}
+							value={wallet._id}>({wallet.type}) {wallet.address}</option
+						>
 					{/each}
 				</select>
 			{:else}
