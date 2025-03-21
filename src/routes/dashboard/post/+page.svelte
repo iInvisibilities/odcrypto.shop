@@ -3,15 +3,15 @@
 	import type { SERWallet } from '$lib/types/wallet';
 	import { onMount } from 'svelte';
 
-	let files: FileList;
-	let product_name: string,
-		product_description: string,
-		product_price_currency: string,
-		wallet_id: string,
-		icon_url: string;
-	let product_price: number;
+	let files: FileList | undefined = $state();
+	let product_name: string = $state(''),
+		product_description: string = $state(''),
+		product_price_currency: string = $state(''),
+		wallet_id: string = $state(''),
+		icon_url: string | undefined = $state();
+	let product_price: number = $state(0);
 
-	let wallets: SERWallet[] = [];
+	let wallets: SERWallet[] = $state([]);
 
 	const requestSignedURL = async (file_name: string): Promise<string | null> => {
 		const product: ProductPost = {
@@ -35,6 +35,8 @@
 	};
 
 	const requestAndUploadToSignedURL = async () => {
+		if (!files) return;
+
 		const file: File | null = files.item(0);
 		if (!file) return;
 		const file_name = file.name;

@@ -9,6 +9,7 @@ import { createWalletObj, getWallet } from '$lib/server/database/db_man/wallets.
 import type { Relationship, SERRelationship } from '$lib/types/object_relationships.js';
 import type { EPInformation, ProductPost } from '$lib/types/product';
 import { json } from '@sveltejs/kit';
+import { hasAllFields } from '$lib/util/TSUtil';
 
 const URL_REG =
 	/^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/;
@@ -16,24 +17,44 @@ const URL_REG =
 export const POST = async ({ request, locals, fetch }): Promise<Response> => {
 	const session = await locals.auth();
 
-	const { object_type, object } = await request.json();
+	let { object_type, object } = (await request.json()) as {
+		object_type: string;
+		object: ProductPost | { address: string; type: string };
+	};
 
 	if (!session || !session.user?.id) {
 		return new Response('Unauthorized!', { status: 401 });
 	}
 
 	if (object_type == 'PRODUCT') {
+		object = object as ProductPost;
 		if (
-			!object.name ||
-			!object.description ||
-			!object.price ||
-			!object.currency ||
-			!object.file_name ||
-			!object.wallet_id ||
-			(<string>object.currency).length > 3 ||
-			(<string>object.currency).length < 0
+			!hasAllFields<ProductPost>(object, [
+				'name',
+				'description',
+				'price',
+				'currency',
+				'file_name',
+				'wallet_id'
+			])
 		) {
 			return new Response('Bad request!', { status: 400 });
+		}
+
+		if (!check_price(object)) {
+			return new Response('Invalid pricing information.', { status: 400 });
+		}
+
+		if (!check_naming(object)) {
+			return new Response('Name or description too long. (32 and 256 characters)', { status: 400 });
+		}
+
+		if (!check_icon_url(object)) {
+			return new Response('Invalid icon URL (must use HTTPS)', { status: 400 });
+		}
+
+		if (!(await check_wallet_address(object))) {
+			return new Response('Invalid wallet address.', { status: 400 });
 		}
 
 		const user_id = session.user?.id;
@@ -45,7 +66,8 @@ export const POST = async ({ request, locals, fetch }): Promise<Response> => {
 			currency: object.currency,
 			file_name: user_id + '/' + object.file_name,
 			bought_how_many_times: 0,
-			wallet_id: object.wallet_id
+			wallet_id: object.wallet_id,
+			icon_url: object.icon_url
 		});
 
 		await establishRelationship(user_id, {
@@ -58,7 +80,8 @@ export const POST = async ({ request, locals, fetch }): Promise<Response> => {
 
 		return json({ signed_url: signedUploadURL });
 	} else if (object_type == 'WALLET') {
-		// ADD MORE CHECKS FOR THE WALLET INFORMATION (TEST FOR ADDRESS)
+		object = object as { address: string; type: string };
+
 		if (!object.address || !object.type) {
 			return new Response('Bad request!', { status: 400 });
 		}
@@ -137,7 +160,6 @@ export const PATCH = async ({ request, locals }): Promise<Response> => {
 		return new Response('No product id provided!', { status: 400 });
 	}
 
-	// ADD MORE CHECKS
 	if (!check_price(updated_info)) {
 		return new Response('Invalid pricing information.', { status: 400 });
 	}
@@ -168,26 +190,28 @@ export const PATCH = async ({ request, locals }): Promise<Response> => {
 	return new Response('Updated successfully!', { status: 200 });
 };
 
-const check_icon_url = (updated_info: EPInformation): boolean => {
+const check_icon_url = (updated_info: EPInformation | ProductPost): boolean => {
 	return (
 		!updated_info.icon_url ||
+		updated_info.icon_url.trim() == '' ||
 		(!!updated_info.icon_url &&
 			updated_info.icon_url?.length <= 256 &&
 			URL_REG.test(updated_info.icon_url))
 	);
 };
 
-const check_naming = (updated_info: EPInformation): boolean => {
+const check_naming = (updated_info: EPInformation | ProductPost): boolean => {
 	return updated_info.name.length <= 32 && updated_info.description.length <= 256;
 };
 
-const check_price = (updated_info: EPInformation): boolean => {
+const check_price = (updated_info: EPInformation | ProductPost): boolean => {
 	return !isNaN(updated_info.price) && updated_info.price > 0 && updated_info.currency.length <= 3;
 };
 
-const check_wallet_address = async (updated_info: EPInformation): Promise<boolean> => {
+const check_wallet_address = async (
+	updated_info: EPInformation | ProductPost
+): Promise<boolean> => {
 	if (!updated_info.wallet_id) return false;
-
 	const supposedWallet = await getWallet(updated_info.wallet_id);
 
 	return supposedWallet != null;
