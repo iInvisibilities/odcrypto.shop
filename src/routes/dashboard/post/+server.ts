@@ -107,6 +107,19 @@ export const POST = async ({ request, locals, fetch }): Promise<Response> => {
 		if (response.networks.length == 0) {
 			return new Response('Invalid address!', { status: 400 });
 		}*/
+		const crypto_address_test = await fetch(
+			'https://app.zerion.io/zpi/wallet/get-meta/v1?identifiers=' + object.address,
+			{
+				headers: {
+					'zerion-client-type': 'web',
+					'zerion-client-version': '1.145.1'
+				}
+			}
+		);
+		const response = await crypto_address_test.json();
+		if (!response.data) {
+			return new Response('Invalid address!', { status: 400 });
+		}
 
 		const user_id = session.user?.id;
 
