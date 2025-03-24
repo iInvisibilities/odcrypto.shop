@@ -10,6 +10,7 @@ import type { Relationship, SERRelationship } from '$lib/types/object_relationsh
 import type { EPInformation, ProductPost } from '$lib/types/product';
 import { json } from '@sveltejs/kit';
 import { hasAllFields } from '$lib/util/TSUtil';
+import { searchPriceAndCode } from 'price-extractor';
 
 const URL_REG =
 	/^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/;
@@ -42,7 +43,7 @@ export const POST = async ({ request, locals, fetch }): Promise<Response> => {
 		}
 
 		if (!check_price(object)) {
-			return new Response('Invalid pricing information.', { status: 400 });
+			return new Response('Invalid price field.', { status: 400 });
 		}
 
 		if (!check_naming(object)) {
@@ -218,7 +219,15 @@ const check_naming = (updated_info: EPInformation | ProductPost): boolean => {
 };
 
 const check_price = (updated_info: EPInformation | ProductPost): boolean => {
-	return !isNaN(updated_info.price) && updated_info.price > 0 && updated_info.currency.length <= 3;
+	if (!updated_info.price || !updated_info.currency) return false;
+	const price = searchPriceAndCode(updated_info.price.toString() + updated_info.currency);
+	return (
+		!isNaN(updated_info.price) &&
+		updated_info.price > 0 &&
+		updated_info.currency.length <= 3 &&
+		price.code != undefined &&
+		price.price != undefined
+	);
 };
 
 const check_wallet_address = async (

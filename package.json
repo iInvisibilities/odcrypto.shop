@@ -54,6 +54,7 @@
 		"crypto": "^1.0.1",
 		"minio": "^8.0.4",
 		"mongodb": "^6.13.0",
+		"price-extractor": "^2.0.3",
 		"redis": "^4.7.0"
 	}
 }

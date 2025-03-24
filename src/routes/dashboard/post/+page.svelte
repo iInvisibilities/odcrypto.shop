@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import type { ProductPost } from '$lib/types/product';
 	import type { SERWallet } from '$lib/types/wallet';
 	import { onMount } from 'svelte';
@@ -13,7 +14,19 @@
 
 	let wallets: SERWallet[] = $state([]);
 
-	const requestSignedURL = async (file_name: string): Promise<string | null> => {
+	let push_not_el: HTMLElement;
+
+	const push_not = (msg: string) => {
+		push_not_el.textContent = msg;
+		push_not_el.style.animation = 'show_not';
+		push_not_el.style.animationDuration = '5s';
+		push_not_el.style.animationTimingFunction = 'ease-out';
+		setTimeout(() => (push_not_el.style.animation = ''), 5000);
+	};
+
+	const requestSignedURL = async (
+		file_name: string
+	): Promise<{ status: boolean; value: string }> => {
 		const product: ProductPost = {
 			name: product_name,
 			description: product_description,
@@ -31,31 +44,39 @@
 			}
 		});
 
-		return request.ok ? (await request.json())['signed_url'] : null;
+		const value = request.ok ? (await request.json())['signed_url'] : await request.text();
+		return { status: request.ok, value };
 	};
 
 	const requestAndUploadToSignedURL = async () => {
-		if (!files) return;
-
-		const file: File | null = files.item(0);
-		if (!file) return;
-		const file_name = file.name;
-		const signed_url = await requestSignedURL(file_name);
-
-		if (!signed_url) {
-			// ERROR
+		if (!files) {
+			push_not("You didn't select a file to upload.");
 			return;
 		}
 
-		const uploadOp = await fetch(signed_url, {
+		const file: File | null = files.item(0);
+		if (!file) {
+			push_not("You didn't select a file to upload.");
+			return;
+		}
+		const file_name = file.name;
+		const signed_url: { status: boolean; value: string } = await requestSignedURL(file_name);
+
+		if (signed_url.status === false) {
+			push_not('Could not upload your product, ' + signed_url.value);
+			return;
+		}
+
+		const uploadOp = await fetch(signed_url.value, {
 			method: 'PUT',
 			body: file
 		});
 
 		if (!uploadOp.ok) {
-			//ERROR
+			push_not('Could not upload your product, please try again later.');
 		} else {
-			// SUCCESS
+			push_not('Product uploaded successfully!');
+			goto('/dashboard');
 		}
 	};
 
@@ -72,6 +93,7 @@
 	onMount(fetchAllWalletOptions);
 </script>
 
+<div class="notification" contenteditable="false" bind:this={push_not_el}></div>
 <div class="w-dvw h-dvh grid items-center bg-gray-800">
 	<div class="p-6 text-medium text-gray-500 dark:text-gray-400 mx-auto xl:w-1/2 min-w-min">
 		<h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Post a New Product</h3>
