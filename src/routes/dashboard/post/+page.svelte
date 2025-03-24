@@ -72,22 +72,93 @@
 	onMount(fetchAllWalletOptions);
 </script>
 
-<form>
-	<input bind:value={product_name} type="text" />
-	<textarea bind:value={product_description} name="" id=""></textarea>
-
-	<input type="number" bind:value={product_price} />
-	<input type="text" bind:value={product_price_currency} />
-	<select bind:value={wallet_id}>
-		{#each wallets as wallet, i}
-			<option selected={i == 0 ? true : undefined} value={wallet._id}
-				>({wallet.type}) {wallet.address}</option
-			>
-		{/each}
-	</select>
-	<input type="text" bind:value={icon_url} />
-
-	<input bind:files type="file" />
-
-	<button onclick={requestAndUploadToSignedURL}>Upload</button>
-</form>
+<div class="w-dvw h-dvh grid items-center bg-gray-800">
+	<div class="p-6 text-medium text-gray-500 dark:text-gray-400 mx-auto xl:w-1/2 min-w-min">
+		<h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Post a New Product</h3>
+		<form
+			class="bg-[rgba(0,80,254,0.43)] p-4 rounded-md shadow-md grid grid-cols-1 md:grid-cols-2 gap-4"
+		>
+			<div class="mb-2">
+				<label class="block text-white mb-2" for="product_name">Product Name</label>
+				<input
+					bind:value={product_name}
+					placeholder="Life Elixir"
+					type="text"
+					id="product_name"
+					class="w-full p-2 rounded-md border border-gray-300 bg-gray-800"
+				/>
+			</div>
+			<div class="mb-2">
+				<label class="block text-white mb-2" for="product_description">Product Description</label>
+				<textarea
+					bind:value={product_description}
+					id="product_description"
+					placeholder="Exciting new life elixir just dropped don't miss the chance to pay up!!!"
+					class="w-full p-2 rounded-md border border-gray-300 bg-gray-800"
+				></textarea>
+			</div>
+			<div class="mb-2">
+				<label class="block text-white mb-2" for="product_price">Product Price</label>
+				<input
+					type="number"
+					bind:value={product_price}
+					id="product_price"
+					class="w-full p-2 rounded-md border border-gray-300 bg-gray-800"
+				/>
+			</div>
+			<div class="mb-2">
+				<label class="block text-white mb-2" for="product_price_currency">Currency</label>
+				<input
+					type="text"
+					bind:value={product_price_currency}
+					id="product_price_currency"
+					placeholder="TND, USD, EUR, etc..."
+					class="w-full p-2 rounded-md border border-gray-300 bg-gray-800"
+				/>
+			</div>
+			<div class="mb-2">
+				<label class="block text-white mb-2" for="wallet_id">Select Crypto Wallet</label>
+				<select
+					bind:value={wallet_id}
+					id="wallet_id"
+					class="w-full p-2 rounded-md border border-gray-300 bg-gray-800"
+				>
+					<option value="" disabled>Select crypto wallet</option>
+					{#each wallets as wallet, i}
+						<option selected={i == 0 ? true : undefined} value={wallet._id}>
+							({wallet.type}) {wallet.address}
+						</option>
+					{/each}
+				</select>
+			</div>
+			<div class="mb-2">
+				<label class="block text-white mb-2" for="icon_url">Icon URL</label>
+				<input
+					type="text"
+					bind:value={icon_url}
+					id="icon_url"
+					placeholder="https://example.com/icon.png"
+					class="w-full p-2 rounded-md border border-gray-300 bg-gray-800"
+				/>
+			</div>
+			<div class="mb-2">
+				<label class="block text-white mb-2" for="file">Upload File</label>
+				<input
+					bind:files
+					type="file"
+					id="file"
+					class="w-full p-2 rounded-md border border-gray-300 bg-gray-800"
+				/>
+			</div>
+			<div class="col-span-full">
+				<button
+					type="button"
+					onclick={requestAndUploadToSignedURL}
+					class="bg-green-600 text-white p-2 rounded-md shadow-md hover:shadow-lg hover:scale-95 transition-all active:scale-90 w-full"
+				>
+					Upload
+				</button>
+			</div>
+		</form>
+	</div>
+</div>
