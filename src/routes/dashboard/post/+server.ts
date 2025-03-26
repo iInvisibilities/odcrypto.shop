@@ -101,14 +101,14 @@ export const POST = async ({ request, locals, fetch }): Promise<Response> => {
 		}
 
 		// CHANGE API TO A MORE RELIABLE ONE
-		/*const crypto_address_test = await fetch(
+		const crypto_address_test = await fetch(
 			'https://api.checkcryptoaddress.com/addresses/' + object.address
 		);
 		const response = await crypto_address_test.json();
 		if (response.networks.length == 0) {
 			return new Response('Invalid address!', { status: 400 });
-		}*/
-		const crypto_address_test = await fetch(
+		}
+		/*const crypto_address_test = await fetch(
 			'https://app.zerion.io/zpi/wallet/get-meta/v1?identifiers=' + object.address,
 			{
 				headers: {
@@ -118,9 +118,12 @@ export const POST = async ({ request, locals, fetch }): Promise<Response> => {
 			}
 		);
 		const response = await crypto_address_test.json();
+		console.log(response);
+		
+		
 		if (!response.data) {
 			return new Response('Invalid address!', { status: 400 });
-		}
+		}*/
 
 		const user_id = session.user?.id;
 

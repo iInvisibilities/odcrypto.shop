@@ -9,12 +9,14 @@
 		product_description: string = $state(''),
 		product_price_currency: string = $state(''),
 		wallet_id: string = $state(''),
-		icon_url: string | undefined = $state();
+		icon_input: HTMLInputElement | undefined = $state();
 	let product_price: number = $state(0);
 
 	let wallets: SERWallet[] = $state([]);
 
 	let push_not_el: HTMLElement;
+
+	let icon_upload_type: string = $state('url');
 
 	const push_not = (msg: string) => {
 		push_not_el.textContent = msg;
@@ -27,11 +29,26 @@
 	const requestSignedURL = async (
 		file_name: string
 	): Promise<{ status: boolean; value: string }> => {
+		if (icon_input == undefined) return { status: false, value: 'Icon input is not defined.' };
+		let icon_url: string = '';
+
+		if(icon_upload_type == "file") {
+			icon_input = icon_input as HTMLInputElement;
+			const icon_file: File | null | undefined = icon_input.files?.item(0);
+
+			if (icon_input.files && icon_file) {
+				// upload file and retrieve icon url
+
+				icon_url = 'some_url';
+			}
+		}
+		else icon_url = icon_input.value;
+
 		const product: ProductPost = {
 			name: product_name,
 			description: product_description,
 			price: product_price,
-			currency: product_price_currency,
+			currency: product_price_currency.toUpperCase(),
 			wallet_id,
 			icon_url,
 			file_name
@@ -91,9 +108,11 @@
 	};
 
 	onMount(fetchAllWalletOptions);
+
 </script>
 
 <div class="notification" contenteditable="false" bind:this={push_not_el}></div>
+<a class="z-10 absolute top-4 left-4 invert flex items-center gap-3 bg-black text-white rounded-lg p-2 py-1 transition-all hover:scale-105 ease-out" href="/dashboard"><img class="w-8 invert" src="../left-arrow.svg" alt="">Back to Dashboard</a>
 <div class="w-dvw h-dvh grid items-center bg-gray-800">
 	<div class="p-6 text-medium text-gray-500 dark:text-gray-400 mx-auto xl:w-1/2 min-w-min">
 		<h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Post a New Product</h3>
@@ -135,7 +154,7 @@
 					bind:value={product_price_currency}
 					id="product_price_currency"
 					placeholder="TND, USD, EUR, etc..."
-					class="w-full p-2 rounded-md border border-gray-300 bg-gray-800"
+					class="w-full p-2 uppercase rounded-md border border-gray-300 bg-gray-800"
 				/>
 			</div>
 			<div class="mb-2">
@@ -154,11 +173,18 @@
 				</select>
 			</div>
 			<div class="mb-2">
-				<label class="block text-white mb-2" for="icon_url">Icon URL</label>
+				<div class="flex items-center gap-2 mb-2">
+					<label class="block text-white" for="icon_url">Icon</label>
+					<select class="bg-transparent rounded-md text-white *:text-black" bind:value={icon_upload_type}>
+						<option value="url">URL</option>
+						<option value="file">File</option>
+					</select> <span class="opacity-75 self-end text-sm pointer-events-none select-none">(optional)</span>
+				</div>
 				<input
-					type="text"
-					bind:value={icon_url}
+					type={icon_upload_type === 'url' ? 'url' : 'file'}
+					bind:this={icon_input}
 					id="icon_url"
+					accept={icon_upload_type === 'file' ? 'image/*' : ''}
 					placeholder="https://example.com/icon.png"
 					class="w-full p-2 rounded-md border border-gray-300 bg-gray-800"
 				/>
