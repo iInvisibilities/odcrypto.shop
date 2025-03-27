@@ -38,6 +38,8 @@
 	let push_not_el: HTMLElement;
 
 	const push_not = (msg: string) => {
+		push_not_el.style.animation = '';
+
 		push_not_el.textContent = msg;
 		push_not_el.style.animation = 'show_not';
 		push_not_el.style.animationDuration = '5s';

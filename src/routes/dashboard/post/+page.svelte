@@ -16,9 +16,11 @@
 
 	let push_not_el: HTMLElement;
 
-	let icon_upload_type: string = $state('url');
+	let icon_upload_type: "file" | "url" = $state('url');
 
 	const push_not = (msg: string) => {
+		push_not_el.style.animation = '';
+
 		push_not_el.textContent = msg;
 		push_not_el.style.animation = 'show_not';
 		push_not_el.style.animationDuration = '5s';
@@ -37,9 +39,28 @@
 			const icon_file: File | null | undefined = icon_input.files?.item(0);
 
 			if (icon_input.files && icon_file) {
-				// upload file and retrieve icon url
+				push_not("Uploading icon file...");
+				
+				const request = await fetch('/dashboard/post', {
+					method: 'POST',
+					body: JSON.stringify({ object_type: 'ICON', object: { file_name: icon_file.name } }),
+					headers: {
+						'Content-Type': 'application/json'
+					}
+				});
+				if (!request.ok) return { status: false, value: await request.text() };
 
-				icon_url = 'some_url';
+				const response = await request.json();
+				const value = response['signed_url'];
+
+				const uploadOp = await fetch(value, {
+					method: 'PUT',
+					body: icon_file
+				});
+				if (!uploadOp.ok) return { status: false, value: 'Could not upload icon file.' }
+				
+				push_not("Icon file uploaded successfully!");
+				icon_url = response['new_file_name'];
 			}
 		}
 		else icon_url = icon_input.value;

@@ -1,5 +1,5 @@
 import { COINBASE_API_KEY } from '$env/static/private';
-import { requestUpload } from '$lib/server/cloud_storage/minio_man/upto_bucket';
+import { requestUpload, requestIconUpload } from '$lib/server/cloud_storage/minio_man/upto_bucket';
 import {
 	establishRelationship,
 	getRelationshipsHolderOf
@@ -14,72 +14,85 @@ import { searchPriceAndCode } from 'price-extractor';
 
 const URL_REG =
 	/^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/;
+const LOCAL_ICON_URLS_PREFIX = "[LOCAL]";
 
 export const POST = async ({ request, locals, fetch }): Promise<Response> => {
 	const session = await locals.auth();
 
 	let { object_type, object } = (await request.json()) as {
 		object_type: string;
-		object: ProductPost | { address: string; type: string };
+		object: ProductPost | { address: string; type: string } | { file_name: string };
 	};
 
 	if (!session || !session.user?.id) {
 		return new Response('Unauthorized!', { status: 401 });
 	}
 
-	if (object_type == 'PRODUCT') {
-		object = object as ProductPost;
-		if (
-			!hasAllFields<ProductPost>(object, [
-				'name',
-				'description',
-				'price',
-				'currency',
-				'file_name',
-				'wallet_id'
-			])
-		) {
-			return new Response('Bad request!', { status: 400 });
+	if (object_type == 'PRODUCT' || object_type == 'ICON') {
+		let signedUploadURL: String = '';
+
+		if (object_type == 'PRODUCT') {
+			object = object as ProductPost;
+			if (
+				!hasAllFields<ProductPost>(object, [
+					'name',
+					'description',
+					'price',
+					'currency',
+					'file_name',
+					'wallet_id'
+				])
+			) {
+				return new Response('Bad request!', { status: 400 });
+			}
+
+			if (!check_price(object)) {
+				return new Response('Invalid price field.', { status: 400 });
+			}
+
+			if (!check_naming(object)) {
+				return new Response('Name or description too long. (32 and 256 characters)', { status: 400 });
+			}
+
+			if (!check_icon_url(object)) {
+				return new Response('Invalid icon URL (must use HTTPS)', { status: 400 });
+			}
+
+			if (!(await check_wallet_address(object))) {
+				return new Response('Invalid wallet address.', { status: 400 });
+			}
+
+			const user_id = session.user?.id;
+
+			const created_prod = await createProduct({
+				name: object.name,
+				description: object.description,
+				price: object.price,
+				currency: object.currency,
+				file_name: user_id + '/' + object.file_name,
+				bought_how_many_times: 0,
+				wallet_id: object.wallet_id,
+				icon_url: object.icon_url
+			});
+
+			await establishRelationship(user_id, {
+				object_id: created_prod._id,
+				relationship_type: 'POSTED',
+				established_at: new Date()
+			});
+
+			signedUploadURL	= await requestUpload(user_id, object.file_name);
+			return json({ signed_url: signedUploadURL });
 		}
-
-		if (!check_price(object)) {
-			return new Response('Invalid price field.', { status: 400 });
+		else {
+			object = object as { file_name: string };
+			if (!object.file_name || object.file_name.trim() == '') {
+				return new Response('Bad request!', { status: 400 });
+			}
+			
+			signedUploadURL = await requestIconUpload(session.user?.id,  object.file_name);
+			return json({ new_file_name: LOCAL_ICON_URLS_PREFIX + session.user?.id + "/" + object.file_name,  signed_url: signedUploadURL });
 		}
-
-		if (!check_naming(object)) {
-			return new Response('Name or description too long. (32 and 256 characters)', { status: 400 });
-		}
-
-		if (!check_icon_url(object)) {
-			return new Response('Invalid icon URL (must use HTTPS)', { status: 400 });
-		}
-
-		if (!(await check_wallet_address(object))) {
-			return new Response('Invalid wallet address.', { status: 400 });
-		}
-
-		const user_id = session.user?.id;
-
-		const created_prod = await createProduct({
-			name: object.name,
-			description: object.description,
-			price: object.price,
-			currency: object.currency,
-			file_name: user_id + '/' + object.file_name,
-			bought_how_many_times: 0,
-			wallet_id: object.wallet_id,
-			icon_url: object.icon_url
-		});
-
-		await establishRelationship(user_id, {
-			object_id: created_prod._id,
-			relationship_type: 'POSTED',
-			established_at: new Date()
-		});
-
-		const signedUploadURL = await requestUpload(user_id, object.file_name);
-
-		return json({ signed_url: signedUploadURL });
 	} else if (object_type == 'WALLET') {
 		object = object as { address: string; type: string };
 
@@ -211,6 +224,7 @@ const check_icon_url = (updated_info: EPInformation | ProductPost): boolean => {
 	return (
 		!updated_info.icon_url ||
 		updated_info.icon_url.trim() == '' ||
+		updated_info.icon_url.includes(LOCAL_ICON_URLS_PREFIX) ||
 		(!!updated_info.icon_url &&
 			updated_info.icon_url?.length <= 256 &&
 			URL_REG.test(updated_info.icon_url))
