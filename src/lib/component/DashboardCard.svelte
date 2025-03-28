@@ -37,8 +37,12 @@
 	let product_info: EPInformation | undefined = $state();
 
 	const open_product_editor = (prod_info: EPInformation) => {
+		icon_upload_type = "url";
 		product_info = prod_info;
 	};
+
+	let icon_upload_type: "file" | "url" = $state('url');
+	let icon_input: HTMLInputElement | undefined = $state();
 
 	async function save_data(
 		_event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement }
@@ -46,6 +50,40 @@
 		if (relation instanceof Promise || !relation || !relation.object || !product_info) return;
 
 		//data.relations[edited_product_index] = Promise.resolve(edited_product);
+
+		if (icon_upload_type == "file") {
+			icon_input = icon_input as HTMLInputElement;
+			const icon_file: File | null | undefined = icon_input.files?.item(0);
+
+			if (icon_input.files && icon_file) {
+				push_not("Uploading icon file...");
+				
+				const request = await fetch('/dashboard/post', {
+					method: 'POST',
+					body: JSON.stringify({ object_type: 'ICON', object: { file_name: icon_file.name } }),
+					headers: {
+						'Content-Type': 'application/json'
+					}
+				});
+				if (!request.ok) return { status: false, value: await request.text() };
+
+				const response = await request.json();
+				const value = response['signed_url'];
+
+				const uploadOp = await fetch(value, {
+					method: 'PUT',
+					body: icon_file
+				});
+				if (!uploadOp.ok) return { status: false, value: 'Could not upload icon file.' }
+				
+				push_not("Icon file uploaded successfully!");
+				product_info.icon_url = response['new_file_name'];
+
+				icon_upload_type = "url";
+				icon_input.value = product_info.icon_url ?? "";
+			}
+		}
+
 		push_not("Updating product's information...");
 		const response = await fetch('/dashboard/post', {
 			method: 'PATCH',
@@ -153,11 +191,11 @@
 
 {#if product_info}
 	<div
-		class="text-black absolute z-20 inset-0 m-auto h-max w-max grid bg-white backdrop-opacity-40 *:h-max *:w-max p-1 shadow-lg border-2"
+		class="text-black absolute z-20 inset-0 m-auto h-max w-min grid gap-2 bg-white backdrop-opacity-40 *:h-max *:w-max p-1 shadow-lg border-2"
 		style="grid-template-columns: repeat(2, 1fr);"
 	>
 		{#each Object.keys(product_info).filter((pKey) => pKey != 'product_id') as product_info_type}
-			<label for="name">{product_info_type.replace('_', ' ') + ':'}</label>
+			<label for="name" class="mr-4">{product_info_type.replace('_', ' ')}</label>
 			{#if product_info_type == 'description'}
 				<textarea
 					bind:value={product_info['description']}
@@ -172,6 +210,21 @@
 						>
 					{/each}
 				</select>
+			{:else if product_info_type == "icon_url"}
+				<div>
+					<select class="bg-transparent rounded-md text-black *:text-black border-2 border-gray-500" bind:value={icon_upload_type}>
+						<option value="url">URL</option>
+						<option value="file">File</option>
+					</select>
+					<input
+						type={icon_upload_type === 'url' ? 'url' : 'file'}
+						bind:this={icon_input}
+						bind:value={product_info[product_info_type as keyof EPInformation]}
+						id="icon_url"
+						accept={icon_upload_type === 'file' ? 'image/*' : ''}
+						placeholder="https://example.com/icon.png"
+					/>
+				</div>
 			{:else}
 				<input
 					bind:value={product_info[product_info_type as keyof EPInformation]}
