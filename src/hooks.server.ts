@@ -2,7 +2,7 @@ import { connectToMongoDB } from '$lib/server/database/mongodb';
 import type { CookieSerializeOptions } from 'cookie';
 import { connectToRedis } from '$lib/server/cache/redis';
 import { connectMinioClient } from '$lib/server/cloud_storage/minio_client';
-import type { Handle } from '@sveltejs/kit';
+import type { Handle, RequestEvent } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { handle as authHandle } from "$lib/server/manager/auth"
 import { generateNewRateLimiter, isEligibaleToRequest, isEligibleResetLimiter, newRequestOccured } from '$lib/server/rate_limiter/ratelimit_strings';
@@ -17,7 +17,7 @@ const R_LIMIT_COOKIE_NAME: string = "X-limiter";
 const R_LIMIT_COOKIE_SETTINGS: CookieSerializeOptions & { path: string } = {
     secure: true,
     httpOnly: true,
-    path: "/",
+    path: "/dashboard/post;/api",
     priority: "high"
 };
 
@@ -25,15 +25,15 @@ const rateLimitMiddleware: Handle = async ({ event, resolve }) => {
     const currentUserLimit: string | undefined = event.cookies.get(R_LIMIT_COOKIE_NAME);
     const currentUserLimit_salt: string | undefined = event.cookies.get(R_LIMIT_COOKIE_NAME + "_iv");
 
-    if (currentUserLimit == undefined || currentUserLimit_salt == undefined) {
-        event.setHeaders({ "Credentials": "true"});
-
-        const newLimiter: { encryptedData: string, iv: string } = await encryptString(generateNewRateLimiter());
-        event.cookies.set(R_LIMIT_COOKIE_NAME, newLimiter.encryptedData, R_LIMIT_COOKIE_SETTINGS);
-        event.cookies.set(R_LIMIT_COOKIE_NAME + "_iv", newLimiter.iv, R_LIMIT_COOKIE_SETTINGS);
-    }
+    if (currentUserLimit == undefined || currentUserLimit_salt == undefined) await applyBrandNewLimiterToRequest(event);
     else {
-        const decryptedCookieString: string = await decryptString(currentUserLimit, currentUserLimit_salt);
+        let decryptedCookieString: string;
+        try {
+            decryptedCookieString = await decryptString(currentUserLimit, currentUserLimit_salt);
+        } catch (error) {
+            await applyBrandNewLimiterToRequest(event);
+            return await resolve(event);
+        }
         
         if (!isEligibaleToRequest(decryptedCookieString)) {
             return new Response("Too many requests!", { status: 429 });
@@ -47,8 +47,15 @@ const rateLimitMiddleware: Handle = async ({ event, resolve }) => {
         event.cookies.set(R_LIMIT_COOKIE_NAME + "_iv", newLimiter.iv, R_LIMIT_COOKIE_SETTINGS);
     }
 
-    const response: Response = await resolve(event);
-    return response;
+    return await resolve(event);
 };
+
+const applyBrandNewLimiterToRequest = async (event: RequestEvent<Partial<Record<string, string>>, string | null>) => {
+    event.setHeaders({ "Credentials": "true" });
+
+    const newLimiter: { encryptedData: string, iv: string } = await encryptString(generateNewRateLimiter());
+    event.cookies.set(R_LIMIT_COOKIE_NAME, newLimiter.encryptedData, R_LIMIT_COOKIE_SETTINGS);
+    event.cookies.set(R_LIMIT_COOKIE_NAME + "_iv", newLimiter.iv, R_LIMIT_COOKIE_SETTINGS);
+}
 
 export const handle: Handle = sequence(authHandle, rateLimitMiddleware);
