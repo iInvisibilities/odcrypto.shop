@@ -82,7 +82,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		)
 			return new Response('Unauthorized!', { status: 401 });
 
-		const downloadURL: string = await requestDownloadProduct(product.file_name);
+		const downloadURL: string = await requestDownloadProduct(product.file_name ?? "");
 
 		return text(downloadURL);
 	} else {

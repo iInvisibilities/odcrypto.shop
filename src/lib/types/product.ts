@@ -6,12 +6,14 @@ export type Product = {
 	description: string;
 	price: number;
 	currency: string;
-	file_name: string;
+	file_name?: string;
 	bought_how_many_times: number;
 	icon_url?: string;
-	wallet_id: string;
+	wallet_id?: string;
 	deleted?: boolean;
 };
+
+export type ProductPageObject =  { productObject: Product & { _id?: undefined, wallet_id?: undefined, file_name?: undefined }, hasBought: boolean, hasPosted: boolean, hasWishlisted: boolean };
 
 export type SERProduct = Product & { _id: string };
 

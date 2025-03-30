@@ -36,7 +36,7 @@ const rateLimitMiddleware: Handle = async ({ event, resolve }) => {
         }
         
         if (!isEligibaleToRequest(decryptedCookieString)) {
-            return new Response("Too many requests!", { status: 429 });
+            return new Response("Too many requests, please try again later...", { status: 429 });
         }
         
         let newLimiter: { encryptedData: string, iv: string };

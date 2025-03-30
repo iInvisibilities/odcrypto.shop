@@ -1,4 +1,4 @@
-import { COINBASE_API_KEY } from '$env/static/private';
+import { COINBASE_API_KEY, LOCAL_ICON_URLS_PREFIX } from '$env/static/private';
 import { requestUpload, requestIconUpload } from '$lib/server/cloud_storage/minio_man/upto_bucket';
 import {
 	establishRelationship,
@@ -14,7 +14,6 @@ import { searchPriceAndCode } from 'price-extractor';
 
 const URL_REG =
 	/^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/;
-const LOCAL_ICON_URLS_PREFIX = "[LOCAL]";
 
 export const POST = async ({ request, locals, fetch }): Promise<Response> => {
 	const session = await locals.auth();

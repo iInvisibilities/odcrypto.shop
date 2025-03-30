@@ -318,7 +318,7 @@
 									price: (relation.object as Product).price,
 									currency: (relation.object as Product).currency,
 									icon_url: (relation.object as Product).icon_url,
-									wallet_id: (relation.object as Product).wallet_id
+									wallet_id: (relation.object as Product).wallet_id ?? ""
 								});
 							}}
 							class="bg-blue-800 rounded-md w-max p-[.3rem] cursor-pointer hover:scale-95 transition-all active:scale-90 shadow-md mr-1"
