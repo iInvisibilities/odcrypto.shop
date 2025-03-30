@@ -13,7 +13,7 @@ export type Product = {
 	deleted?: boolean;
 };
 
-export type ProductPageObject =  { productObject: Product & { _id?: undefined, wallet_id?: undefined, file_name?: undefined }, hasBought: boolean, hasPosted: boolean, hasWishlisted: boolean };
+export type ProductPageObject =  { productObject: Product & { _id?: undefined, wallet_id?: undefined, file_name?: undefined }, isGuest: boolean, hasBought: boolean | undefined, hasPosted: boolean | undefined, hasWishlisted: boolean | undefined };
 
 export type SERProduct = Product & { _id: string };
 

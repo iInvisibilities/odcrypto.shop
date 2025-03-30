@@ -42,23 +42,23 @@ export const POST = async ({ request, locals, fetch }): Promise<Response> => {
 					'wallet_id'
 				])
 			) {
-				return new Response('Bad request!', { status: 400 });
+				return new Response('bad request!', { status: 400 });
 			}
 
 			if (!check_price(object)) {
-				return new Response('Invalid price field.', { status: 400 });
+				return new Response('invalid price field.', { status: 400 });
 			}
 
 			if (!check_naming(object)) {
-				return new Response('Name or description too long. (32 and 256 characters)', { status: 400 });
+				return new Response('length of name should be less than 32 while description between 128 and 256.', { status: 400 });
 			}
 
 			if (!check_icon_url(object)) {
-				return new Response('Invalid icon URL (must use HTTPS)', { status: 400 });
+				return new Response('invalid icon URL (must use HTTPS)', { status: 400 });
 			}
 
 			if (!(await check_wallet_address(object))) {
-				return new Response('Invalid wallet address.', { status: 400 });
+				return new Response('invalid wallet address.', { status: 400 });
 			}
 
 			const user_id = session.user?.id;
@@ -194,7 +194,7 @@ export const PATCH = async ({ request, locals }): Promise<Response> => {
 	}
 
 	if (!check_naming(updated_info)) {
-		return new Response('Name or description too long. (32 and 256 characters)', { status: 400 });
+		return new Response('Length of name should be less than 32 while description between 128 and 256.', { status: 400 });
 	}
 
 	if (!check_icon_url(updated_info)) {
@@ -231,7 +231,7 @@ const check_icon_url = (updated_info: EPInformation | ProductPost): boolean => {
 };
 
 const check_naming = (updated_info: EPInformation | ProductPost): boolean => {
-	return updated_info.name.length <= 32 && updated_info.description.length <= 256;
+	return updated_info.name.length <= 32 && updated_info.description.length >= 128 && updated_info.description.length <= 256;
 };
 
 const check_price = (updated_info: EPInformation | ProductPost): boolean => {

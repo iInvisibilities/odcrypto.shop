@@ -133,12 +133,12 @@
 </script>
 
 <div class="notification" contenteditable="false" bind:this={push_not_el}></div>
-<a class="z-10 absolute top-4 left-4 invert flex items-center gap-3 bg-black text-white rounded-lg p-2 py-1 transition-all hover:scale-105 ease-out" href="/dashboard"><img class="w-8 invert" src="../left-arrow.svg" alt="">Back to Dashboard</a>
+<a class="z-10 absolute top-0 left-0 md:top-4 md:left-4 flex items-center justify-center gap-2 w-max bg-gray-200 text-gray-700 px-4 py-2 md:rounded-md shadow-md hover:bg-gray-300 transition-all duration-150 ease-in-out active:scale-95 opacity-75" href="/dashboard"><img class="w-8 opacity-50" src="../left-arrow.svg" alt="">Dashboard</a>
 <div class="w-dvw h-dvh grid items-center bg-gray-800">
 	<div class="p-6 text-medium text-gray-500 dark:text-gray-400 mx-auto xl:w-1/2 min-w-min">
-		<h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Post a New Product</h3>
+		<h3 class="hidden md:block text-lg font-bold text-gray-900 dark:text-white mb-4">Post a New Product</h3>
 		<form
-			class="bg-[rgba(0,80,254,0.43)] p-4 rounded-md shadow-md grid grid-cols-1 md:grid-cols-2 gap-4"
+			class="bg-gray-900 p-4 rounded-lg shadow-md grid grid-cols-1 md:grid-cols-2 gap-4"
 		>
 			<div class="mb-2">
 				<label class="block text-white mb-2" for="product_name">Product Name</label>
@@ -223,7 +223,7 @@
 				<button
 					type="button"
 					onclick={requestAndUploadToSignedURL}
-					class="bg-green-600 text-white p-2 rounded-md shadow-md hover:shadow-lg hover:scale-95 transition-all active:scale-90 w-full"
+					class="bg-green-600 cursor-pointer w-max px-2 float-right text-white p-2 rounded-md shadow-md hover:shadow-lg hover:scale-95 transition-all active:scale-90"
 				>
 					Upload
 				</button>
