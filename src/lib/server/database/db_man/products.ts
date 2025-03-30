@@ -12,7 +12,13 @@ export async function createProduct(product: Product): Promise<Product> {
 
 export async function getProduct(id: string | undefined): Promise<Product | null> {
 	if (!id) return null;
-	return await coll.findOne({ _id: new ObjectId(id) });
+	try {
+		const _id = new ObjectId(id);
+		return await coll.findOne({ _id });
+	}
+	catch (e) {
+		return null;
+	}
 }
 
 export async function updateProduct(id: string, product: Partial<Product>): Promise<void> {

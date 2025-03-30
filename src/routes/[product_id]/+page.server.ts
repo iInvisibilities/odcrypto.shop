@@ -3,22 +3,22 @@ import { requestIconDownload } from "$lib/server/cloud_storage/minio_man/upto_bu
 import { getAllRelationshipsOfType } from "$lib/server/database/db_man/object_relationships";
 import { getProduct } from "$lib/server/database/db_man/products";
 import type { Product, ProductPageObject } from "$lib/types/product";
+import { redirect } from "@sveltejs/kit";
 import type { PageServerLoad } from "../$types";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
     const session = await locals.auth();
     if (!session || !session.user?.id) {
-        return new Response("Unauthorized!", { status: 401 });
+        redirect(301, "/");
+        return;
     }
 
     const { product_id } = params as { product_id: string };
-    if (!product_id) {
-        return new Response("Product ID is required", { status: 400 });
-    }
     
     const productObj = await getProduct(product_id);
     if (productObj == null) {
-        return new Response("Product not found", { status: 404 });
+        redirect(308, "/");
+        return;
     }
 
     let hasBought = !(await getAllRelationshipsOfType(session.user.id, "BOUGHT")).some((pred) => pred.object_id && productObj._id && pred.object_id.toString() == productObj._id.toString());

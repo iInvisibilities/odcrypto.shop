@@ -5,4 +5,6 @@
     let { data } = $props() as { data: ProductPageObject };
 </script>
 
-<div></div>
+<div>
+    
+</div>
