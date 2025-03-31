@@ -23,9 +23,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     let hasWishlisted = undefined;
 
     if (session?.user?.id) {
-        hasBought = hasRelationshipWithProduct(session.user.id, productObj._id?.toString() ?? "", "BOUGHT");
-        hasPosted = hasRelationshipWithProduct(session.user.id, productObj._id?.toString() ?? "", "POSTED");
-        hasWishlisted = hasRelationshipWithProduct(session.user.id, productObj._id?.toString() ?? "", "WISHLISTED");
+        hasBought = await hasRelationshipWithProduct(session.user.id, product_id, "BOUGHT");
+        hasPosted = await hasRelationshipWithProduct(session.user.id, product_id, "POSTED");
+        hasWishlisted = await hasRelationshipWithProduct(session.user.id, product_id, "WISHLISTED");
     }
     
     if (productObj.icon_url && productObj.icon_url.includes(LOCAL_ICON_URLS_PREFIX)) {
