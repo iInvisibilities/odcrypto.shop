@@ -5,6 +5,7 @@ import { getProduct } from "$lib/server/database/db_man/products";
 import type { Product, ProductPageObject } from "$lib/types/product";
 import { redirect } from "@sveltejs/kit";
 import type { PageServerLoad } from "../$types";
+import type { RelationshipType } from "$lib/types/object_relationships";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
     const session = await locals.auth();
@@ -22,9 +23,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     let hasWishlisted = undefined;
 
     if (session?.user?.id) {
-        hasBought = (await getAllRelationshipsOfType(session.user.id, "BOUGHT")).some((pred) => pred.object_id && productObj._id && pred.object_id.toString() == productObj._id.toString());
-        hasPosted = (await getAllRelationshipsOfType(session.user.id, "POSTED")).some((pred) => pred.object_id && productObj._id && pred.object_id.toString() == productObj._id.toString());
-        hasWishlisted = (await getAllRelationshipsOfType(session.user.id, "WISHLISTED")).some((pred) => pred.object_id && productObj._id && pred.object_id.toString() == productObj._id.toString());
+        hasBought = hasRelationshipWithProduct(session.user.id, productObj._id?.toString() ?? "", "BOUGHT");
+        hasPosted = hasRelationshipWithProduct(session.user.id, productObj._id?.toString() ?? "", "POSTED");
+        hasWishlisted = hasRelationshipWithProduct(session.user.id, productObj._id?.toString() ?? "", "WISHLISTED");
     }
     
     if (productObj.icon_url && productObj.icon_url.includes(LOCAL_ICON_URLS_PREFIX)) {
@@ -34,3 +35,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
     return { isGuest, hasBought, hasPosted, hasWishlisted, productObject: {...productObj, _id: undefined, wallet_id: undefined, file_name: undefined } as Product & { _id?: undefined, wallet_id: undefined, file_name: undefined } } as ProductPageObject;
 };
+
+const hasRelationshipWithProduct = async (userId: string, productId: string, relationshipType: RelationshipType) => {
+    return (await getAllRelationshipsOfType(userId, relationshipType)).some((pred) => pred.object_id && pred.object_id.toString() == productId);
+}
