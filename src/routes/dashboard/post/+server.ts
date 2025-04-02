@@ -50,7 +50,7 @@ export const POST = async ({ request, locals, fetch }): Promise<Response> => {
 			}
 
 			if (!check_naming(object)) {
-				return new Response('length of name should be less than 32 while description between 128 and 256.', { status: 400 });
+				return new Response('length of name should be less than 32 while description between 200 and 500.', { status: 400 });
 			}
 
 			if (!check_icon_url(object)) {
@@ -194,7 +194,7 @@ export const PATCH = async ({ request, locals }): Promise<Response> => {
 	}
 
 	if (!check_naming(updated_info)) {
-		return new Response('Length of name should be less than 32 while description between 128 and 256.', { status: 400 });
+		return new Response('Length of name should be less than 32 while description between 200 and 500.', { status: 400 });
 	}
 
 	if (!check_icon_url(updated_info)) {
@@ -231,7 +231,7 @@ const check_icon_url = (updated_info: EPInformation | ProductPost): boolean => {
 };
 
 const check_naming = (updated_info: EPInformation | ProductPost): boolean => {
-	return updated_info.name.length <= 32 && updated_info.description.length >= 128 && updated_info.description.length <= 256;
+	return updated_info.name.length <= 32 && updated_info.description.length >= 200 && updated_info.description.length <= 500;
 };
 
 const check_price = (updated_info: EPInformation | ProductPost): boolean => {

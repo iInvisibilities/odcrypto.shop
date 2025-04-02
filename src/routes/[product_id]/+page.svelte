@@ -10,6 +10,10 @@
 	function toggleWishlisted(event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement; }) {
         hasWishlisted = !hasWishlisted;
 	}
+
+    const download = (e: ClickEvent) => {
+        
+    }
 </script>
 
 {#if data.isGuest}
@@ -43,7 +47,7 @@
             {/if}
             <div class="flex flex-col gap-2">
                 <div class="flex items-center justify-between w-full gap-4">
-                    <h1 class="text-2xl font-bold">{data.productObject.name}</h1>
+                    <h1 class="text-2xl font-bold min-w-72 max-w-72 text-wrap break-words">{data.productObject.name}</h1>
                     {#if !data.isGuest}
                         <button title="Add to wishlist" class="{hasWishlisted ? 'bg-red-700' : 'bg-red-200'} w-5 h-5 heart-shape text-transparent select-none cursor-pointer transition-all duration-100 ease-out active:scale-95 active:-skew-2 shadow-xl hover:scale-105" onclick={toggleWishlisted}>_</button>
                     {/if}
@@ -55,11 +59,11 @@
         <div class="gap-2 {(!data.isGuest ? "flex justify-end place-items-end items-end" : "grid")}">
             {#if !data.isGuest}
                 {#if data.hasBought || data.hasPosted}
-                    <button class="bg-green-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-green-700 transition-all duration-150 ease-in-out active:scale-95">
+                    <button onclick={download} class="bg-green-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-green-700 transition-all duration-150 ease-in-out active:scale-95">
                         Download
                     </button>
                 {:else}
-                    <a href="/" class="float-right bg-yellow-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-yellow-700 transition-all duration-150 ease-in-out active:scale-95">
+                    <a href="purchase" class="float-right bg-yellow-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-yellow-700 transition-all duration-150 ease-in-out active:scale-95">
                         Purchase
                     </a>
                 {/if}
