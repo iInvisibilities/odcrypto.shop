@@ -7,15 +7,43 @@
     let { data }: PageProps = $props();
     let hasWishlisted = $state(data.hasWishlisted ?? false);
 
-	function toggleWishlisted(event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement; }) {
+    let push_not_el: HTMLElement;
+
+	const push_not = (msg: string) => {
+		push_not_el.style.animation = '';
+
+		push_not_el.textContent = msg;
+		push_not_el.style.animation = 'show_not';
+		push_not_el.style.animationDuration = '5s';
+		push_not_el.style.animationTimingFunction = 'ease-out';
+		setTimeout(() => (push_not_el.style.animation = ''), 5000);
+	};
+
+	export const toggleWishlisted = (event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement; }) => {
         hasWishlisted = !hasWishlisted;
+        // SAVE INFO IN DB
 	}
 
-    const download = (e: ClickEvent) => {
-        
+    export const download = async () => {
+        if (data.isGuest) {
+            push_not("Please login to download this product.");
+            return;
+        }
+        if (data.hasBought || data.hasPosted) {
+            const requestDownload = await fetch('/api?product_id=' + (data.productObject._id ?? ''), {
+			method: 'GET'
+		});
+		if (!requestDownload.ok || requestDownload.status != 200) {
+			push_not('Could not download product!');
+			return;
+		}
+
+		window.open(await requestDownload.text(), '_blank');
+        } else push_not("You need to purchase this product before downloading.");
     }
 </script>
 
+<div class="notification" contenteditable="false" bind:this={push_not_el}></div>
 {#if data.isGuest}
     <a href="/" class="absolute z-10 top-2 left-2 flex items-center justify-center gap-2 w-max bg-gray-200 text-gray-700 px-4 py-2 rounded-md shadow-md hover:bg-gray-300 transition-all duration-150 ease-in-out active:scale-95">
         <img class="w-4 opacity-50" src="../left-arrow.svg" alt="">Home page
