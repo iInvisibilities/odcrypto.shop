@@ -1,10 +1,13 @@
 <script lang="ts">
-	import type { ProductPageObject } from "$lib/types/product";
 	import { SignIn } from "@auth/sveltekit/components";
 	import type { PageProps } from "./$types";
+    import { page } from '$app/state';
 
 
     let { data }: PageProps = $props();
+
+    let { product_id } = page.params;
+
     let hasWishlisted = $state(data.hasWishlisted ?? false);
 
     let push_not_el: HTMLElement;
@@ -19,9 +22,37 @@
 		setTimeout(() => (push_not_el.style.animation = ''), 5000);
 	};
 
-	export const toggleWishlisted = (event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement; }) => {
+	export const toggleWishlisted = async (event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement; }) => {
+        if (hasWishlisted) {
+            const delRequ = await fetch(
+                '/api?type=WISHLISTED&object_id=' + product_id,
+                {
+                    method: 'DELETE'
+                }
+            );
+            if (delRequ.ok && delRequ.status == 200) {
+                push_not("Removed from wishlist!");
+            } else {
+                push_not(await delRequ.text());
+                return;
+            }
+        }
+		else {
+            const addRequ = await fetch(
+                '/api?object_id=' + product_id,
+                {
+                    method: 'POST'
+                }
+            );
+            if (addRequ.ok && addRequ.status == 200) {
+                push_not("Added to wishlist!");
+            } else {
+                push_not(await addRequ.text());
+                return;
+            }
+        }
+
         hasWishlisted = !hasWishlisted;
-        // SAVE INFO IN DB
 	}
 
     export const download = async () => {
@@ -30,7 +61,7 @@
             return;
         }
         if (data.hasBought || data.hasPosted) {
-            const requestDownload = await fetch('/api?product_id=' + (data.productObject._id ?? ''), {
+            const requestDownload = await fetch('/api?product_id=' + product_id, {
 			method: 'GET'
 		});
 		if (!requestDownload.ok || requestDownload.status != 200) {

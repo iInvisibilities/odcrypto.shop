@@ -17,7 +17,7 @@ const R_LIMIT_COOKIE_NAME: string = "X-limiter";
 const R_LIMIT_COOKIE_SETTINGS: CookieSerializeOptions & { path: string } = {
     secure: true,
     httpOnly: true,
-    path: "/dashboard/post;/api",
+    path: "/api",
     priority: "high"
 };
 

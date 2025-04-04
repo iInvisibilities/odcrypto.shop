@@ -1,12 +1,40 @@
 import { requestDownloadProduct } from '$lib/server/cloud_storage/minio_man/upto_bucket';
 import {
 	deleteEstablishedRelationship,
+	establishRelationship,
 	getAllRelationshipsOfType
 } from '$lib/server/database/db_man/object_relationships';
 import { getProduct, markAsDeleted } from '$lib/server/database/db_man/products';
 import { deleteWallet, getWallet } from '$lib/server/database/db_man/wallets';
+import type { Relationship } from '$lib/types/object_relationships';
 import type { SERWallet } from '$lib/types/wallet';
 import { json, text, type RequestHandler } from '@sveltejs/kit';
+import { ObjectId } from 'mongodb';
+
+// ADD TO WISHLIST ROUTE
+export const POST: RequestHandler = async ({ url, locals }) => {
+	const auth = await locals.auth();
+	if (!auth) {
+		return new Response('Unauthorized!', { status: 401 });
+	}
+	const user_id = auth.user?.id;
+	if (!user_id) return new Response('Unauthorized!', { status: 401 });
+
+	const obj_id = url.searchParams.get('object_id');
+	if (!obj_id) return new Response('Bad request!', { status: 400 });
+	
+	const product_obj = await getProduct(obj_id);
+	if (!product_obj) return new Response('Bad request!', { status: 400 });
+
+	const rlp_obj: Relationship = {
+		relationship_type: 'WISHLISTED',
+		object_id: new ObjectId(obj_id),
+		established_at: new Date()
+	};
+
+	await establishRelationship(user_id, rlp_obj);
+	return new Response('Added to wishlist!', { status: 200 });
+}
 
 export const DELETE: RequestHandler = async ({ url, locals }) => {
 	const auth = await locals.auth();
