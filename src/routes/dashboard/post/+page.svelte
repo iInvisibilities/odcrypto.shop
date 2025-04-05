@@ -2,7 +2,9 @@
 	import { goto } from '$app/navigation';
 	import type { ProductPost } from '$lib/types/product';
 	import type { SERWallet } from '$lib/types/wallet';
-	import { onMount } from 'svelte';
+
+	const { data } = $props();
+	const user_wallets = data.user_wallets as SERWallet[];
 
 	let files: FileList | undefined = $state();
 	let product_name: string = $state(''),
@@ -11,8 +13,6 @@
 		wallet_id: string = $state(''),
 		icon_input: HTMLInputElement | undefined = $state();
 	let product_price: number = $state(0);
-
-	let wallets: SERWallet[] = $state([]);
 
 	let push_not_el: HTMLElement;
 
@@ -118,18 +118,6 @@
 		}
 	};
 
-	const fetchAllWalletOptions = async () => {
-		const request = await fetch('/api?is_wallet=true', {
-			method: 'GET'
-		});
-
-		if (request.ok) {
-			wallets = (await request.json()).my_wallets;
-		}
-	};
-
-	onMount(fetchAllWalletOptions);
-
 </script>
 
 <div class="notification" contenteditable="false" bind:this={push_not_el}></div>
@@ -186,7 +174,7 @@
 					class="w-full p-2 rounded-md border border-gray-300 bg-gray-800"
 				>
 					<option value="" disabled>Select crypto wallet</option>
-					{#each wallets as wallet, i}
+					{#each user_wallets as wallet, i}
 						<option selected={i == 0 ? true : undefined} value={wallet._id}>
 							({wallet.type}) {wallet.address}
 						</option>

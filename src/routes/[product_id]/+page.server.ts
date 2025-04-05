@@ -7,7 +7,7 @@ import { redirect } from "@sveltejs/kit";
 import type { PageServerLoad } from "../$types";
 import type { RelationshipType } from "$lib/types/object_relationships";
 
-export const load: PageServerLoad = async ({ params, locals }) => {
+export const load: PageServerLoad = async ({ url, params, locals }) => {
     const session = await locals.auth();
     const isGuest = !session?.user?.id;
 
@@ -16,6 +16,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     const productObj = await getProduct(product_id);
     if (productObj == null) {
         redirect(308, "/");
+    }
+
+    if (url.searchParams.get("purchase") == "true") {
+        if (!isGuest) {
+            redirect(303, `/${product_id}/purchase`);
+        } else redirect(307, "/");
+        
     }
 
     let hasBought = undefined;

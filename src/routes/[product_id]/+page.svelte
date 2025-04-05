@@ -122,7 +122,7 @@
                         Download
                     </button>
                 {:else}
-                    <a href="purchase" class="float-right bg-yellow-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-yellow-700 transition-all duration-150 ease-in-out active:scale-95">
+                    <a href="?purchase=true" class="float-right bg-yellow-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-yellow-700 transition-all duration-150 ease-in-out active:scale-95">
                         Purchase
                     </a>
                 {/if}
