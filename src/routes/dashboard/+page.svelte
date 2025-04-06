@@ -100,7 +100,7 @@
 		wallet_address = '';
 	}
 
-	const fetchAllWalletOptions = async () => {
+	const fetchAllWalletOptions = () => {
 		relations_data.map((r) => {
 			r.then((obj) => {
 				if (obj && obj?.rlp.relationship_type == 'WALLET') wallets.push(obj.object as SERWallet);
@@ -110,22 +110,22 @@
 
 	let liveTransactionsSection: LiveTransaction[] | undefined = $state(undefined);
 
-	onMount(() => {
+	onMount(async () => {
 		fetchAllWalletOptions();
-		// fetch all live transactions
-		liveTransactionsSection = [];
-		/*liveTransactionsSection = async () => {
-			const request = await fetch('/api?type=LIVE_TRANSACTIONS', {
-				method: 'GET'
-			});
-			if (request.status == 200) {
-				const live_transactions = await request.json();
-				push_not('Fetched live transactions successfully!');
-			} else {
-				push_not('Could not fetch live transactions, ' + (await request.text()));
+		const request = await fetch('/dashboard', { method: 'GET' });
+		if (request.status == 200) {
+			const response = await request.json();
+			if (response?.live_transactions) {
+				liveTransactionsSection = response.live_transactions as LiveTransaction[];
+				push_not("You're a super user, you can see current live transactions.");
 			}
-		};*/
+		}
 	});
+
+
+	function showLiveTransactionsMenu(event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement; }) {
+		throw new Error('Function not implemented.');
+	}
 </script>
 
 {#if is_adding_wallet}
@@ -181,7 +181,7 @@
 		<DashboardBtn {onclick} onmount={() => {}} src="wallet.svg" val="WALLET">Wallets</DashboardBtn>
 		<DashboardBtn {onclick} {onmount} src="history-log.svg" val="HISTORY">History</DashboardBtn>
 		{#if liveTransactionsSection}
-			<DashboardBtn {onclick} {onmount} src="live.svg" val={undefined}>Live transactions</DashboardBtn>
+			<button onclick={showLiveTransactionsMenu} class="hover:opacity-75 cursor-default w-full opacity-80 border-b-2 inline-flex select-none gap-2 text-lg items-center px-4 py-2 text-white bg-fuchsia-700 active min-w-[150px]"><img class="invert" width="25" src="live.svg" alt="">Live transactions</button>
 		{/if}
 		<a
 			href="dashboard/post"

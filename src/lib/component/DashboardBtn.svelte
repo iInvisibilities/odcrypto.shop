@@ -7,7 +7,7 @@
 
 	export let src: string,
 		onclick: MouseEventHandler<HTMLButtonElement> | null | undefined,
-		val: RelationshipType | 'HISTORY' | undefined;
+		val: RelationshipType | 'HISTORY';
 	export let onmount: (btn: HTMLButtonElement) => void;
 
 	onMount(() => onmount(btn));
