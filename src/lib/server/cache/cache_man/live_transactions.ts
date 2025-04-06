@@ -4,6 +4,20 @@ import client from '../redis';
 
 const redis_key = (charge_id: string) => `${REDIS_LIVETRANSACTION_SUFFIX + charge_id}`;
 
+export const getAllLiveTransactions = async (): Promise<LiveTransaction[]> => {
+	const keys = await client.keys(`${REDIS_LIVETRANSACTION_SUFFIX}*`);
+	const transactions: LiveTransaction[] = [];
+
+	for (const key of keys) {
+		const transaction = await client.get(key);
+		if (transaction) {
+			transactions.push(JSON.parse(transaction));
+		}
+	}
+
+	return transactions;
+}
+
 export const expectTransaction = async (charge_id: string, user_id: string, product_id: string) => {
 	await client.set(redis_key(charge_id), JSON.stringify({ user_id, product_id }));
 };

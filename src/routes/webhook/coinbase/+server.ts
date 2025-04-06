@@ -1,8 +1,7 @@
+import { COINBASE_WEBHOOK_SECRET } from '$env/static/private';
 import { handleSuccessfulCharge } from '$lib/server/manager/chargesmanager.js';
 import type { RequestHandler } from '@sveltejs/kit';
 import crypto from 'node:crypto';
-
-const coinbase_webhook_secret: string = process.env.COINBASE_WEBHOOK_SECRET ?? '';
 
 export const POST: RequestHandler = async ({ request }) => {
 	const webhook_signature = Buffer.from(
@@ -10,7 +9,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		'utf-8'
 	);
 	const received_body = await request.text();
-	const hmac = crypto.createHmac('sha256', coinbase_webhook_secret);
+	const hmac = crypto.createHmac('sha256', COINBASE_WEBHOOK_SECRET);
 
 	const digest = Buffer.from(hmac.update(received_body).digest('hex'), 'utf8');
 	if (

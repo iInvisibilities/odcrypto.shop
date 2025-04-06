@@ -7,8 +7,8 @@ import {
 	getRelationshipsHolderOf
 } from '$lib/server/database/db_man/object_relationships';
 import { getWallet } from '$lib/server/database/db_man/wallets';
-import type { Product, SERProduct } from '$lib/types/product';
-import type { SERWallet, Wallet } from '$lib/types/wallet';
+import type { SERProduct } from '$lib/types/product';
+import type { SERWallet } from '$lib/types/wallet';
 import type { SERRelationship } from '$lib/types/object_relationships';
 
 export const ssr = true;
@@ -16,7 +16,7 @@ export const ssr = true;
 export const load: PageServerLoad = async ({ locals }) => {
 	const session = await locals.auth();
 
-	if (!session || !session.user?.id) redirect(303, `/`);
+	if (!session?.user?.id) redirect(303, `/`);
 
 	const user_object_relationships = await getRelationshipsHolderOf(session.user?.id ?? '');
 	if (!user_object_relationships) return { relations: [] };

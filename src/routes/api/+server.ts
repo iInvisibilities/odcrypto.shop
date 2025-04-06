@@ -88,54 +88,21 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 	if (!user_id) return new Response('Unauthorized!', { status: 401 });
 
-	const is_wallet = url.searchParams.get('is_wallet');
-	if (!is_wallet) {
-		const product_id = url.searchParams.get('product_id');
+	const product_id = url.searchParams.get('product_id');
 
-		if (!product_id) return new Response('Bad request!', { status: 400 });
-		const product = await getProduct(product_id);
-		if (!product) return new Response('Bad request!', { status: 400 });
-		const boughtProdsOfUser = await getAllRelationshipsOfType(user_id, 'BOUGHT');
-		const postedProdsOfUser = await getAllRelationshipsOfType(user_id, 'POSTED');
+	if (!product_id) return new Response('Bad request!', { status: 400 });
+	const product = await getProduct(product_id);
+	if (!product) return new Response('Bad request!', { status: 400 });
+	const boughtProdsOfUser = await getAllRelationshipsOfType(user_id, 'BOUGHT');
+	const postedProdsOfUser = await getAllRelationshipsOfType(user_id, 'POSTED');
 
-		if (
-			!boughtProdsOfUser.some(
-				(pred) =>
-					pred.object_id && product._id && pred.object_id.toString() == product._id.toString()
-			) &&
-			!postedProdsOfUser.some(
-				(pred) =>
-					pred.object_id && product._id && pred.object_id.toString() == product._id.toString()
-			)
-		)
-			return new Response('Unauthorized!', { status: 401 });
+	if (
+		!boughtProdsOfUser.some((pred) =>
+			pred.object_id && product._id && pred.object_id.toString() == product._id.toString()
+	) && !postedProdsOfUser.some((pred) =>
+		pred.object_id && product._id && pred.object_id.toString() == product._id.toString()
+	)) return new Response('Unauthorized!', { status: 401 });
+	const downloadURL: string = await requestDownloadProduct(product.file_name ?? "");
 
-		const downloadURL: string = await requestDownloadProduct(product.file_name ?? "");
-
-		return text(downloadURL);
-	} else {
-		/*const wallet_id = url.searchParams.get('wallet_id');
-
-		if (!wallet_id) return new Response('Bad request!', { status: 400 });*/
-
-		let user_wallets: SERWallet[] = [];
-		const createdWalletsByUser = await getAllRelationshipsOfType(user_id, 'WALLET');
-		for (const createdWallet in createdWalletsByUser) {
-			const rlp = createdWalletsByUser[createdWallet];
-			const wallet = await getWallet(rlp.object_id?.toString() ?? '');
-			if (wallet != null)
-				user_wallets.push({ ...wallet, _id: wallet._id?.toString() ?? '' } as SERWallet);
-		}
-
-		/*if (!wallet) return new Response('Bad request!', { status: 400 });*/
-
-		/*if (
-			!createdWalletsByUser.some(
-				(pred) => pred.object_id && wallet._id && pred.object_id.toString() == wallet._id.toString()
-			)
-		)
-			return new Response('Unauthorized!', { status: 401 });*/
-
-		return json({ my_wallets: user_wallets });
-	}
+	return text(downloadURL);
 };

@@ -7,18 +7,18 @@
 
 	export let src: string,
 		onclick: MouseEventHandler<HTMLButtonElement> | null | undefined,
-		val: RelationshipType | 'HISTORY';
+		val: RelationshipType | 'HISTORY' | undefined;
 	export let onmount: (btn: HTMLButtonElement) => void;
 
 	onMount(() => onmount(btn));
 </script>
 
-<li>
+<li class="w-full">
 	<button
 		bind:this={btn}
 		data-val={val}
 		{onclick}
-		class="hover:opacity-80 border-b-2 inline-flex select-none gap-2 text-lg items-center px-4 py-2 text-white bg-[#0050FE] active min-w-[150px] dark:bg-[#0050FE]"
+		class="hover:opacity-80 border-b-2 inline-flex select-none min-w-max gap-2 text-lg items-center px-4 py-2 text-white bg-[#0050FE] active w-full dark:bg-[#0050FE]"
 	>
 		<img class="invert" width="25" {src} alt="" />
 		<slot></slot>

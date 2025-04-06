@@ -6,6 +6,7 @@
 	import type { RelationshipType, SERRelationship } from '$lib/types/object_relationships';
 	import type { SERWallet } from '$lib/types/wallet';
 	import { onMount } from 'svelte';
+	import type { LiveTransaction } from '$lib/types/transaction';
 
 	let { data }: PageProps = $props();
 
@@ -36,6 +37,7 @@
 	};
 
 	let push_not_el: HTMLElement;
+	let dropdown: HTMLElement | undefined = $state(undefined);
 
 	const push_not = (msg: string) => {
 		push_not_el.style.animation = '';
@@ -89,6 +91,7 @@
 					object: wallet
 				})
 			);
+			wallets.push(wallet);
 		} else {
 			push_not('Could not link wallet, ' + (await request.text()));
 		}
@@ -98,16 +101,31 @@
 	}
 
 	const fetchAllWalletOptions = async () => {
-		const request = await fetch('/api?is_wallet=true', {
-			method: 'GET'
+		relations_data.map((r) => {
+			r.then((obj) => {
+				if (obj && obj?.rlp.relationship_type == 'WALLET') wallets.push(obj.object as SERWallet);
+			});
 		});
-
-		if (request.ok) {
-			wallets = (await request.json()).my_wallets;
-		}
 	};
 
-	onMount(fetchAllWalletOptions);
+	let liveTransactionsSection: LiveTransaction[] | undefined = $state(undefined);
+
+	onMount(() => {
+		fetchAllWalletOptions();
+		// fetch all live transactions
+		liveTransactionsSection = [];
+		/*liveTransactionsSection = async () => {
+			const request = await fetch('/api?type=LIVE_TRANSACTIONS', {
+				method: 'GET'
+			});
+			if (request.status == 200) {
+				const live_transactions = await request.json();
+				push_not('Fetched live transactions successfully!');
+			} else {
+				push_not('Could not fetch live transactions, ' + (await request.text()));
+			}
+		};*/
+	});
 </script>
 
 {#if is_adding_wallet}
@@ -141,8 +159,15 @@
 
 <div class="notification" contenteditable="false" bind:this={push_not_el}></div>
 <div class="md:flex Coinbase min-h-dvh">
+	<button
+		class="md:hidden block bg-green-500 text-white w-full shadow-md py-2 hover:bg-blue-600 transition-all"
+		onclick={() => dropdown?.classList.toggle("hidden")}
+	>
+		Toggle Menu
+	</button>
 	<ul
-		class="flex-column flex-wrap md:block md:w-max w-full justify-center *:border-l-white *:border-l-2 md:*:border-l-0 md:*:w-max flex text-sm font-medium text-gray-500 dark:text-gray-400"
+		bind:this={dropdown}
+		class="hidden flex-column flex-wrap md:block md:w-max w-full justify-center *:border-l-white *:border-l-0 text-sm font-medium text-gray-500 dark:text-gray-400"
 	>
 		<DashboardBtn {onclick} onmount={() => {}} src="backpack.svg" val="BOUGHT"
 			>Backpack</DashboardBtn
@@ -155,15 +180,18 @@
 		>
 		<DashboardBtn {onclick} onmount={() => {}} src="wallet.svg" val="WALLET">Wallets</DashboardBtn>
 		<DashboardBtn {onclick} {onmount} src="history-log.svg" val="HISTORY">History</DashboardBtn>
+		{#if liveTransactionsSection}
+			<DashboardBtn {onclick} {onmount} src="live.svg" val={undefined}>Live transactions</DashboardBtn>
+		{/if}
 		<a
 			href="dashboard/post"
-			class="hover:opacity-75 cursor-default opacity-80 border-b-2 inline-flex select-none gap-2 text-lg items-center px-4 py-2 text-white bg-green-500 active min-w-[150px] dark:bg-green-500"
+			class="hover:opacity-75 cursor-default w-full opacity-80 border-b-2 inline-flex select-none gap-2 text-lg items-center px-4 py-2 text-white bg-green-500 active min-w-[150px] dark:bg-green-500"
 		>
 			<img class="invert" width="25" src="product.svg" alt="" />For sale</a
 		>
-		<SignOut signOutPage="user/signout">
+		<SignOut signOutPage="user/signout" className="w-full *:w-full">
 			<span
-				class="hover:opacity-75 opacity-80 inline-flex select-none gap-2 text-lg items-center px-4 py-2 text-white bg-red-500 active min-w-[150px] dark:bg-red-500"
+				class="hover:opacity-75 w-full opacity-80 inline-flex select-none gap-2 text-lg items-center px-4 py-2 text-white bg-red-500 active min-w-[150px] dark:bg-red-500"
 				slot="submitButton"><img class="invert" width="25" src="log-out.svg" alt="" />Log Out</span
 			>
 		</SignOut>

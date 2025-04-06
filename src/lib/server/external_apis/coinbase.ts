@@ -1,7 +1,6 @@
+import { COINBASE_API_KEY } from '$env/static/private';
 import type { ProductDAO } from '$lib/types/product.js';
 import { expectTransaction } from '../cache/cache_man/live_transactions';
-
-const coinbase_api_key: string = process.env.COINBASE_API_KEY ?? '';
 
 /**
  * @param product product to be sold
@@ -17,18 +16,20 @@ export const createCharge = async (user_id: string, product: ProductDAO): Promis
 			currency: product.currency
 		}
 	};
+	
 	const charge_create = await fetch('https://api.commerce.coinbase.com/charges/', {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
-			'X-CC-Api-Key': coinbase_api_key
+			'X-CC-Api-Key': COINBASE_API_KEY,
+			'X-CC-Version': '2018-03-22'
 		},
 		body: JSON.stringify(charge_obj)
 	});
-	if (!charge_create.ok) return Promise.reject('FAILED TO CREATE CHARGE');
+	if (!charge_create.ok) return Promise.reject('Failed to create charge');
 
-	const charge_data = await charge_create.json();
+	const charge_data = (await charge_create.json()).data;
 	await expectTransaction(charge_data.id, user_id, product.id);
-
+	
 	return Promise.resolve(charge_data.hosted_url);
 };
