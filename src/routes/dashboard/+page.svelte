@@ -122,11 +122,49 @@
 		}
 	});
 
-
+	let isLiveTransactionsMenuOpen = $state(false);
 	function showLiveTransactionsMenu(event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement; }) {
-		throw new Error('Function not implemented.');
+		isLiveTransactionsMenuOpen = true;
 	}
 </script>
+
+{#if isLiveTransactionsMenuOpen && liveTransactionsSection}
+	
+	<div class="z-20 absolute h-dvh w-dvw text-xl grid items-center justify-center backdrop_eff">
+		<div>
+			<div class="flex w-full backdrop_eff_2">
+				<button class="bg-[#0050ff] text-white py-1 px-3 rounded-tl-md" onclick={async (e) => {
+					const setDisplayText = (text: string) => {
+						if (e.target == null) return;
+						(e.target as HTMLButtonElement).textContent = text;
+					}
+					
+					setDisplayText("Reloading...");
+					const request = await fetch('/dashboard', { method: 'GET' });
+					if (request.status == 200) {
+						const response = await request.json();
+						if (response?.live_transactions) {
+							liveTransactionsSection = response.live_transactions as LiveTransaction[];
+							setDisplayText("Reload Complete!");
+							setTimeout(() => setDisplayText("Reload"), 1500);
+						}
+						else setDisplayText("Error!");
+					}
+					else setDisplayText("Error!");
+				}}>Reload</button>
+				<button class="bg-[#FC565E] text-white py-1 px-3 rounded-tr-md" onclick={() => (isLiveTransactionsMenuOpen = false)}>Close</button>
+			</div>
+			<div class="grid gap-2 max-h-72 shadow-lg rounded-md rounded-tl-none *:h-max *:w-max bg-white p-4 overflow-auto backdrop_eff_2">
+				{#each liveTransactionsSection as transaction}
+					<div class="flex items-center gap-1 w-full">
+						<span>{transaction.user_id}</span>
+						<span>{transaction.product_id}</span>
+					</div>
+				{/each}
+			</div>
+		</div>
+	</div>
+{/if}
 
 {#if is_adding_wallet}
 	<div class="z-20 absolute h-dvh w-dvw text-xl grid items-center justify-center backdrop_eff">
