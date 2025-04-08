@@ -6,7 +6,7 @@
 	import type { RelationshipType, SERRelationship } from '$lib/types/object_relationships';
 	import type { SERWallet } from '$lib/types/wallet';
 	import { onMount } from 'svelte';
-	import type { LiveTransaction } from '$lib/types/transaction';
+	import type { LiveTransaction, LiveTransactionWithUsernames } from '$lib/types/transaction';
 
 	let { data }: PageProps = $props();
 
@@ -108,15 +108,15 @@
 		});
 	};
 
-	let liveTransactionsSection: LiveTransaction[] | undefined = $state(undefined);
+	let liveTransactionsSection: LiveTransactionWithUsernames | undefined = $state(undefined);
 
 	onMount(async () => {
 		fetchAllWalletOptions();
 		const request = await fetch('/dashboard', { method: 'GET' });
 		if (request.status == 200) {
 			const response = await request.json();
-			if (response?.live_transactions) {
-				liveTransactionsSection = response.live_transactions as LiveTransaction[];
+			if (response?.live_transactions_with_usernames) {
+				liveTransactionsSection = response.live_transactions_with_usernames as LiveTransactionWithUsernames;
 				push_not("You're a super user, you can see current live transactions.");
 			}
 		}
@@ -143,8 +143,8 @@
 					const request = await fetch('/dashboard', { method: 'GET' });
 					if (request.status == 200) {
 						const response = await request.json();
-						if (response?.live_transactions) {
-							liveTransactionsSection = response.live_transactions as LiveTransaction[];
+						if (response?.live_transactions_with_usernames) {
+							liveTransactionsSection = response.live_transactions_with_usernames as LiveTransactionWithUsernames;
 							setDisplayText("Reload Complete!");
 							setTimeout(() => setDisplayText("Reload"), 1500);
 						}
@@ -157,8 +157,9 @@
 			<div class="grid gap-2 max-h-72 shadow-lg rounded-md rounded-tl-none *:h-max *:w-max bg-white p-4 overflow-auto backdrop_eff_2">
 				{#each liveTransactionsSection as transaction}
 					<div class="flex items-center gap-1 w-full">
-						<span>{transaction.user_id}</span>
-						<span>{transaction.product_id}</span>
+						<a class="hover:underline font-semibold" href="/user/{transaction.user.user_id}" target="_blank">{transaction.user.username}</a>
+						<span class="select-none">is buying</span>
+						<a class="hover:underline font-semibold" href="/{transaction.product.product_id}" target="_blank">{transaction.product.product_name}</a>
 					</div>
 				{/each}
 			</div>

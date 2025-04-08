@@ -10,15 +10,15 @@ export async function createProduct(product: Product): Promise<Product> {
 	return { ...product, _id: result.insertedId };
 }
 
-export async function getProduct(id: string | undefined): Promise<Product | null> {
+export async function getProduct(id: string): Promise<Product | null> {
+	return await getProduct_specific(id, {});
+}
+export async function getProduct_specific(id: string | undefined, specific_fields: object): Promise<Product | null> {
 	if (!id) return null;
 	try {
-		const _id = new ObjectId(id);
-		return await coll.findOne({ _id });
+		return await coll.find({ _id: new ObjectId(id) }).project(specific_fields).next() as Product;
 	}
-	catch (e) {
-		return null;
-	}
+	catch (e) { return null; }
 }
 
 export async function updateProduct(id: string, product: Partial<Product>): Promise<void> {
