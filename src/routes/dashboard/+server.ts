@@ -8,8 +8,8 @@ export const GET = async ({ locals }) => {
     const auth = await locals.auth();
     if (!auth) return new Response('Unauthorized!', { status: 401 });
     const is_super = (auth.user as Record<string, any>).is_super;
-
     if (!is_super) return json({});
+
     const live_transactions = await getAllLiveTransactions();
     const live_transactions_with_usernames: LiveTransactionWithUsernames = [];
 
