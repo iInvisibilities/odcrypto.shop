@@ -1,7 +1,7 @@
 import { getAllLiveTransactions } from "$lib/server/cache/cache_man/live_transactions";
 import { getProduct_specific } from "$lib/server/database/db_man/products.js";
 import { getUsernameFromId } from "$lib/server/database/db_man/users";
-import type { LiveTransactionWithUsernames } from "$lib/types/transaction";
+import type { LiveTransaction, LiveTransactionWithUsernames } from "$lib/types/transaction";
 import { json } from "@sveltejs/kit";
 
 export const GET = async ({ locals }) => {
@@ -10,7 +10,7 @@ export const GET = async ({ locals }) => {
     const is_super = (auth.user as Record<string, any>).is_super;
     if (!is_super) return json({});
 
-    const live_transactions = await getAllLiveTransactions();
+    const live_transactions:LiveTransaction[] = await getAllLiveTransactions();
     const live_transactions_with_usernames: LiveTransactionWithUsernames = [];
 
     for (const live_transaction_index in live_transactions) {
@@ -22,7 +22,8 @@ export const GET = async ({ locals }) => {
         if (user != null && product != null) {
             live_transactions_with_usernames.push({
                 user: { user_id: transaction.user_id, username: user.name ?? "" },
-                product: { product_id: transaction.product_id, product_name: product.name }
+                product: { product_id: transaction.product_id, product_name: product.name },
+                time_created: transaction.time_created
             });
         }
     }

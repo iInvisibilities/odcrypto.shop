@@ -10,8 +10,13 @@ export const getAllLiveTransactions = async (): Promise<LiveTransaction[]> => {
 
 	for (const key of keys) {
 		const transaction = await client.get(key);
-		if (transaction) {
-			transactions.push(JSON.parse(transaction));
+		const time_created = await client.get(key + ':time_created');
+
+		if (transaction && time_created) {
+			const parsedTransaction = JSON.parse(transaction);
+			parsedTransaction.time_created = time_created;
+
+			transactions.push(parsedTransaction);
 		}
 	}
 
@@ -20,6 +25,10 @@ export const getAllLiveTransactions = async (): Promise<LiveTransaction[]> => {
 
 export const expectTransaction = async (charge_id: string, user_id: string, product_id: string) => {
 	await client.set(redis_key(charge_id), JSON.stringify({ user_id, product_id }));
+	await client.set(redis_key(charge_id) + ":time_created", Date.now());
+
+	await client.expire(redis_key(charge_id), 60 * 60 * 2); // 2 hours
+	await client.expire(redis_key(charge_id) + ":time_created", 60 * 60 * 2); // 2 hours
 };
 
 export const getLiveTransaction = async (charge_id: string): Promise<LiveTransaction | null> => {
@@ -29,4 +38,5 @@ export const getLiveTransaction = async (charge_id: string): Promise<LiveTransac
 
 export const deleteLiveTransaction = async (charge_id: string): Promise<void> => {
 	await client.del(redis_key(charge_id));
+	await client.del(redis_key(charge_id) + ":time_created");
 };

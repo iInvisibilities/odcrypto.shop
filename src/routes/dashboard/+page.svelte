@@ -6,7 +6,7 @@
 	import type { RelationshipType, SERRelationship } from '$lib/types/object_relationships';
 	import type { SERWallet } from '$lib/types/wallet';
 	import { onMount } from 'svelte';
-	import type { LiveTransaction, LiveTransactionWithUsernames } from '$lib/types/transaction';
+	import type { LiveTransactionWithUsernames } from '$lib/types/transaction';
 
 	let { data }: PageProps = $props();
 
@@ -129,7 +129,6 @@
 </script>
 
 {#if isLiveTransactionsMenuOpen && liveTransactionsSection}
-	
 	<div class="z-20 absolute h-dvh w-dvw text-xl grid items-center justify-center backdrop_eff">
 		<div>
 			<div class="flex w-full backdrop_eff_2">
@@ -155,13 +154,18 @@
 				<button class="bg-[#FC565E] text-white py-1 px-3 rounded-tr-md" onclick={() => (isLiveTransactionsMenuOpen = false)}>Close</button>
 			</div>
 			<div class="grid gap-2 max-h-72 shadow-lg rounded-md rounded-tl-none *:h-max *:w-max bg-white p-4 overflow-auto backdrop_eff_2">
-				{#each liveTransactionsSection as transaction}
-					<div class="flex items-center gap-1 w-full">
-						<a class="hover:underline font-semibold" href="/user/{transaction.user.user_id}" target="_blank">{transaction.user.username}</a>
-						<span class="select-none">is buying</span>
-						<a class="hover:underline font-semibold" href="/{transaction.product.product_id}" target="_blank">{transaction.product.product_name}</a>
-					</div>
-				{/each}
+				{#if liveTransactionsSection.length > 0}
+					{#each liveTransactionsSection as transaction}
+						<div class="flex items-center gap-1 w-full">
+							<span class="text-gray-500 select-none">{new Date(transaction.time_created).toLocaleTimeString()}</span>
+							<a class="hover:underline font-semibold" href="/user/{transaction.user.user_id}" target="_blank">{transaction.user.username}</a>
+							<span class="select-none">is buying</span>
+							<a class="hover:underline font-semibold" href="/{transaction.product.product_id}" target="_blank">{transaction.product.product_name}</a>
+						</div>
+					{/each}
+				{:else}
+					<div class="text-center text-gray-500 select-none">No live transactions</div>
+				{/if}
 			</div>
 		</div>
 	</div>
