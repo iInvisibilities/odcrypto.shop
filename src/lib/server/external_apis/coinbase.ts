@@ -1,12 +1,20 @@
-import { COINBASE_API_KEY } from '$env/static/private';
+import { COINBASE_API_KEY, MAX_LIVE_TRANSACTIONS_PER_USER } from '$env/static/private';
 import type { ProductDAO } from '$lib/types/product.js';
-import { expectTransaction } from '../cache/cache_man/live_transactions';
+import { expectTransaction, findPurchaseUrl, getAmountOfLiveTransactionsOfUser, setPurchaseUrl } from '../cache/cache_man/live_transactions';
 
 /**
  * @param product product to be sold
  * @returns payment url for customer
  */
 export const createCharge = async (user_id: string, product: ProductDAO): Promise<string> => {
+	const purchase_url = await findPurchaseUrl(user_id, product.id);
+	if (purchase_url != null) return Promise.resolve(purchase_url);
+
+	const currentLiveTransactions = await getAmountOfLiveTransactionsOfUser(user_id);
+	if (currentLiveTransactions > Number.parseInt(MAX_LIVE_TRANSACTIONS_PER_USER)) {
+		return Promise.reject('Too many transactions for this user in progress, please try again later');
+	}
+
 	const charge_obj = {
 		name: product.name,
 		description: product.description,
@@ -29,7 +37,10 @@ export const createCharge = async (user_id: string, product: ProductDAO): Promis
 	if (!charge_create.ok) return Promise.reject('Failed to create charge');
 
 	const charge_data = (await charge_create.json()).data;
-	await expectTransaction(charge_data.id, user_id, product.id);
-	
+	const is_transaction_created = await expectTransaction(charge_data.id, user_id, product.id);
+	if (!is_transaction_created) return Promise.reject('Too many transactions for this user in progress, please try again later');
+	if (charge_data.hosted_url == null) return Promise.reject('Failed to create charge, no hosted url');
+
+	await setPurchaseUrl(user_id, product.id, charge_data.hosted_url);
 	return Promise.resolve(charge_data.hosted_url);
 };

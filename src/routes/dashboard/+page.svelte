@@ -156,8 +156,8 @@
 			<div class="grid gap-2 max-h-72 shadow-lg rounded-md rounded-tl-none *:h-max *:w-max bg-white p-4 overflow-auto backdrop_eff_2">
 				{#if liveTransactionsSection.length > 0}
 					{#each liveTransactionsSection as transaction}
-						<div class="flex items-center gap-1 w-full">
-							<span class="text-gray-500 select-none">{new Date(transaction.time_created).toLocaleTimeString()}</span>
+						<div class="flex items-center justify-center gap-1 w-full">
+							<span class="text-gray-500 select-none text-sm">{new Date(transaction.time_created).toLocaleTimeString()}</span>
 							<a class="hover:underline font-semibold" href="/user/{transaction.user.user_id}" target="_blank">{transaction.user.username}</a>
 							<span class="select-none">is buying</span>
 							<a class="hover:underline font-semibold" href="/{transaction.product.product_id}" target="_blank">{transaction.product.product_name}</a>
