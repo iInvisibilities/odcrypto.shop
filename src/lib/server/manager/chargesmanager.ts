@@ -17,5 +17,5 @@ export const handleSuccessfulCharge = async (charge_id: string) => {
 		established_at: new Date()
 	});
 
-	await deleteLiveTransaction(charge_id, user_id);
+	await deleteLiveTransaction(charge_id, product_id, user_id);
 };

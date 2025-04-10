@@ -21,6 +21,7 @@ export const GET = async ({ locals }) => {
         
         if (user != null && product != null) {
             live_transactions_with_usernames.push({
+                charge_id: transaction.charge_id,
                 user: { user_id: transaction.user_id, username: user.name ?? "" },
                 product: { product_id: transaction.product_id, product_name: product.name },
                 time_created: transaction.time_created

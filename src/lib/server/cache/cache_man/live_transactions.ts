@@ -25,9 +25,11 @@ export const getAllLiveTransactions = async (): Promise<LiveTransaction[]> => {
 
 	for (const key of keys) {
 		const transaction = await client.get(key);
+		const charge_id = key.replace(REDIS_LIVETRANSACTION_SUFFIX, '');
 
 		if (transaction) {
 			const parsedTransaction = JSON.parse(transaction);
+			parsedTransaction.charge_id = charge_id; // Add charge_id to the transaction object
 
 			transactions.push(parsedTransaction);
 		}
@@ -54,8 +56,12 @@ export const getLiveTransaction = async (charge_id: string): Promise<LiveTransac
 	return transaction ? JSON.parse(transaction) : null;
 };
 
-export const deleteLiveTransaction = async (charge_id: string, user_id: string): Promise<void> => {
-	await client.del(redis_key(charge_id));
+export const deleteLiveTransaction = async (charge_id: string, product_id: string, user_id: string): Promise<boolean | void> => {
+	const del1 = await client.del(redis_key(charge_id));
+	if (del1 == 0) return false;
+
+	const del2 = await client.del(purchase_url_key(user_id, product_id));
+	if (del2 == 0) return false;
 
 	const user_am = await client.get(user_key(user_id));
 	if (user_am) {

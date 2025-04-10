@@ -126,6 +126,35 @@
 	function showLiveTransactionsMenu(event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement; }) {
 		isLiveTransactionsMenuOpen = true;
 	}
+
+
+	export const delete_live_transaction = async (product_id: string, charge_id: string, user_id: string): Promise<import("svelte/elements").MouseEventHandler<HTMLButtonElement> | null | undefined> => {
+		const reason = prompt('Reason for canceling transaction?');
+		if (!reason) return null;
+		push_not('Please wait...');
+
+		const del_req = await fetch("/dashboard/live_transaction", {
+			method: 'DELETE',
+			body: JSON.stringify({
+				product_id,
+				charge_id,
+				user_id,
+				reason
+			}),
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		});
+		if (del_req.status == 200) {
+			const response = await del_req.json();
+			if (response?.deleted) {
+				liveTransactionsSection = liveTransactionsSection?.filter((transaction) => transaction.charge_id != charge_id);
+				push_not('Transaction canceled successfully!');
+			}
+		} else {
+			push_not('Could not cancel transaction, ' + (await del_req.text()));
+		}
+	}
 </script>
 
 {#if isLiveTransactionsMenuOpen && liveTransactionsSection}
@@ -156,11 +185,14 @@
 			<div class="grid gap-2 max-h-72 shadow-lg rounded-md rounded-tl-none *:h-max *:w-max bg-white p-4 overflow-auto backdrop_eff_2">
 				{#if liveTransactionsSection.length > 0}
 					{#each liveTransactionsSection as transaction}
-						<div class="flex items-center justify-center gap-1 w-full">
-							<span class="text-gray-500 select-none text-sm">{new Date(transaction.time_created).toLocaleTimeString()}</span>
-							<a class="hover:underline font-semibold" href="/user/{transaction.user.user_id}" target="_blank">{transaction.user.username}</a>
-							<span class="select-none">is buying</span>
-							<a class="hover:underline font-semibold" href="/{transaction.product.product_id}" target="_blank">{transaction.product.product_name}</a>
+						<div class="flex items-center justify-center gap-2">
+							<div class="flex items-center justify-center gap-1 w-full">
+								<span class="text-gray-500 select-none text-sm">{new Date(transaction.time_created).toLocaleTimeString()}</span>
+								<a class="hover:underline font-semibold" href="/user/{transaction.user.user_id}" target="_blank">{transaction.user.username}</a>
+								<span class="select-none">is buying</span>
+								<a class="hover:underline font-semibold" href="/{transaction.product.product_id}" target="_blank">{transaction.product.product_name}</a>
+							</div>
+							<button class="cursor-pointer hover:scale-110 transition-all" onclick={() => delete_live_transaction(transaction.product.product_id, transaction.charge_id, transaction.user.user_id)} title="Cancel live transaction"><img class="w-6" src="delete.svg" alt="x"/></button>
 						</div>
 					{/each}
 				{:else}
