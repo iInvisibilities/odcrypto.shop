@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { SERRelationship } from '$lib/types/object_relationships';
 	import type { EPInformation, Product, SERProduct } from '$lib/types/product';
+	import type { LiveTransaction } from '$lib/types/transaction';
 	import type { SERWallet, Wallet } from '$lib/types/wallet';
 	import { onMount } from 'svelte';
 
@@ -13,7 +14,7 @@
 	}: {
 		rlp: Promise<{
 			rlp: SERRelationship;
-			object: SERProduct | SERWallet;
+			object: SERProduct | SERWallet | LiveTransaction;
 		} | null>;
 		current_page: string | undefined;
 		push_not: (msg: string) => void;
@@ -24,11 +25,11 @@
 	let relation:
 		| Promise<{
 				rlp: SERRelationship;
-				object: SERProduct | SERWallet;
+				object: SERProduct | SERWallet | LiveTransaction;
 		  } | null>
 		| {
 				rlp: SERRelationship;
-				object: SERProduct | SERWallet;
+				object: SERProduct | SERWallet | LiveTransaction;
 		  }
 		| null = $state(rlp);
 
@@ -159,7 +160,7 @@
 	}
 	async function download() {
 		if (relation instanceof Promise || !relation || !relation.object) return;
-		const requestDownload = await fetch('/api?product_id=' + (relation.object._id ?? ''), {
+		const requestDownload = await fetch('/api?product_id=' + ((relation.object as SERProduct)._id ?? ''), {
 			method: 'GET'
 		});
 		if (!requestDownload.ok || requestDownload.status != 200) {
@@ -175,7 +176,7 @@
 		if (!confirm('Are you sure?')) return;
 
 		const del_request = await fetch(
-			'/api?is_wallet=true&object_id=' + (relation.object._id ?? ''),
+			'/api?is_wallet=true&object_id=' + ((relation.object as SERWallet)._id ?? ''),
 			{
 				method: 'DELETE'
 			}
@@ -183,9 +184,14 @@
 
 		if (del_request.status == 200) {
 			push_not((relation.object as SERWallet).type + ' wallet deleted successfully!');
-			deleted_object_elements.push(relation.object._id ?? null);
+			deleted_object_elements.push((relation.object as SERWallet)._id ?? null);
 			if (own_dom) own_dom.remove();
 		} else push_not('Could not delete wallet!');
+	}
+
+
+	function show_live_transaction_info(arg0: LiveTransaction & { reason: string; }) {
+		alert('Transaction cancelled at ' + new Date(arg0.time_created).toLocaleString() + '\nCharge ID: ' + arg0.charge_id + '\nUser ID: ' + arg0.user_id + '\nProduct ID: ' + arg0.product_id + '\nReason: ' + arg0.reason);
 	}
 </script>
 
@@ -250,7 +256,7 @@
 {/if}
 
 {#if !(relation instanceof Promise)}
-	{#if relation?.object && !(relation.object instanceof Promise) && relation.object != null && (!current_page || relation.rlp.relationship_type == current_page) && !deleted_object_elements.includes(relation.object._id ?? null)}
+	{#if relation?.object && !(relation.object instanceof Promise) && relation.object != null && (!current_page || relation.rlp.relationship_type == current_page) && !deleted_object_elements.includes((relation.object as SERWallet | SERProduct)._id ?? null)}
 		{#if relation.rlp.relationship_type != 'WALLET'}
 			<div
 				bind:this={own_dom}
@@ -267,7 +273,7 @@
 			>
 				<a
 					href={current_page && !(relation.object as Product).deleted
-						? '/' + (relation.object._id?.toString() ?? '')
+						? '/' + ((relation.object as Product)._id?.toString() ?? '')
 						: undefined}
 					target={current_page && !(relation.object as Product).deleted ? '_blank' : '_self'}
 					class="{!current_page
@@ -275,21 +281,28 @@
 						: 'grid'} overflow-auto overflow-y-auto w-full"
 				>
 					{#if current_page == undefined}
-						<span class="bg-gray-700 text-white p-1 rounded-md shadow-sm select-none"
-							>{relation.rlp.relationship_type}</span
+						<span class="bg-gray-700 text-white p-1 rounded-md shadow-sm select-none text-sm"
+							>{relation.rlp.relationship_type == "MODERATOR_ACTION" ? "TRANSACTION CANCEL" : relation.rlp.relationship_type}</span
 						>
 					{/if}
-					<div class="flex items-center justify-around w-max gap-2 min-w-max">
-						<span class={(relation.object as Product).deleted ? 'opacity-50 line-through' : ''}
-							>{(relation.object as Product).name}</span
-						>
-						{#if current_page}
-							<span class="opacity-75 select-none"
-								>for {(relation.object as Product).price}{(relation.object as Product)
-									.currency}</span
+					{#if relation.rlp.relationship_type != "MODERATOR_ACTION"}
+						<div class="flex items-center justify-around w-max gap-2 min-w-max">
+							<span class={(relation.object as Product).deleted ? 'opacity-50 line-through' : ''}
+								>{(relation.object as Product).name}</span
 							>
-						{/if}
-					</div>
+							{#if current_page}
+								<span class="opacity-75 select-none"
+									>for {(relation.object as Product).price}{(relation.object as Product)
+										.currency}</span
+								>
+							{/if}
+						</div>
+					{:else}
+						<button onclick={() => {
+							if (relation == null || relation instanceof Promise) return;
+							show_live_transaction_info(relation.object as LiveTransaction & { reason: string })
+						}} class="p-1 py-0.5 rounded-md transition-all duration-150 hover:opacity-85 cursor-pointer select-none bg-blue-600">Click to view</button>
+					{/if}
 					<span class="opacity-75 md:text-sm text-xs min-w-max mx-2 select-none"
 						>@ {relation.rlp.established_at}</span
 					>
@@ -312,7 +325,7 @@
 								)
 									return;
 								open_product_editor({
-									product_id: relation.object._id?.toString() ?? '',
+									product_id: (relation.object as Product)._id?.toString() ?? '',
 									name: (relation.object as Product).name,
 									description: (relation.object as Product).description,
 									price: (relation.object as Product).price,
@@ -352,9 +365,9 @@
 				class="text-white xl:w-2/3 bg-gray-900 rounded-lg flex flex-wrap overflow-auto items-center justify-between gap-2 p-2 mx-2 shadow-lg my-1"
 			>
 				<div class="flex gap-2 items-center justify-start flex-wrap">
-					<span class="bg-gray-700 text-white p-1 rounded-md shadow-sm select-none"
+					<span class="bg-gray-700 text-white p-1 rounded-md shadow-sm select-none text-sm"
 						>{(relation.object as Wallet).type.toUpperCase()}{current_page == undefined
-							? ' wallet linked'
+							? ' WALLET LINKED'
 							: ''}</span
 					>
 					{#if current_page == 'WALLET'}
@@ -365,8 +378,8 @@
 							<img src="delete.svg" class="w-5 invert" alt="" /></button
 						>
 					{/if}
-					<span>{(relation.object as Wallet).address}</span>
-					<span class="opacity-75 md:text-sm text-xs min-w-max mx-2 select-none"
+					<span class="select-none">{current_page == undefined ? ((relation.object as Wallet).address.slice(0, 5) + " ... " + (relation.object as Wallet).address.slice(-4)) : (relation.object as Wallet).address}</span>
+						<span class="opacity-75 md:text-sm text-xs min-w-max mx-2 select-none"
 						>@ {relation.rlp.established_at}</span
 					>
 				</div>

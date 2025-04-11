@@ -1,6 +1,6 @@
 import type { ObjectId } from 'mongodb';
 
-export type RelationshipType = 'BOUGHT' | 'POSTED' | 'WISHLISTED' | 'WALLET';
+export type RelationshipType = 'MODERATOR_ACTION' | 'BOUGHT' | 'POSTED' | 'WISHLISTED' | 'WALLET';
 
 export type Relationship = {
 	relationship_type: RelationshipType;

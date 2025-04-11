@@ -10,6 +10,8 @@ import { getWallet } from '$lib/server/database/db_man/wallets';
 import type { SERProduct } from '$lib/types/product';
 import type { SERWallet } from '$lib/types/wallet';
 import type { SERRelationship } from '$lib/types/object_relationships';
+import type { LiveTransaction } from '$lib/types/transaction';
+import { getArchivedTransaction } from '$lib/server/database/db_man/archived_live_transactions';
 
 export const ssr = true;
 
@@ -25,11 +27,22 @@ export const load: PageServerLoad = async ({ locals }) => {
 		relations: user_object_relationships.relations.map(async (rlp) => {
 			if (!rlp.object_id) return null;
 
-			let object: SERProduct | SERWallet | null;
+			let object: SERProduct | SERWallet | LiveTransaction | null;
 			if (rlp.relationship_type == 'WALLET') {
 				let wallet_object = await getWallet(rlp.object_id?.toString());
 				object = { ...wallet_object, _id: wallet_object?._id?.toString() } as SERWallet;
 				if (!wallet_object) {
+					await deleteEstablishedRelationship(
+						session.user?.id ?? '',
+						rlp.object_id?.toString() ?? '',
+						rlp.relationship_type
+					);
+				}
+			} 
+			else if (rlp.relationship_type == "MODERATOR_ACTION") {
+				let live_transaction_object = await getArchivedTransaction(rlp.object_id?.toString());
+				object = { ...live_transaction_object, _id: live_transaction_object?._id?.toString() } as LiveTransaction & { _id: string };
+				if (!live_transaction_object) {
 					await deleteEstablishedRelationship(
 						session.user?.id ?? '',
 						rlp.object_id?.toString() ?? '',
@@ -50,7 +63,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 			return {
 				rlp: { ...rlp, object_id: rlp.object_id.toString() } as SERRelationship,
-				object: object as SERProduct | SERWallet
+				object: object as SERProduct | SERWallet | LiveTransaction & { _id: string },
 			};
 		})
 	};

@@ -1,7 +1,9 @@
-import { deleteLiveTransaction } from "$lib/server/cache/cache_man/live_transactions";
+import { deleteLiveTransaction, getLiveTransaction } from "$lib/server/cache/cache_man/live_transactions";
+import { archiveLiveTransaction } from "$lib/server/database/db_man/archived_live_transactions";
 import { establishRelationship } from "$lib/server/database/db_man/object_relationships";
 import type { RequestHandler } from "@sveltejs/kit";
 import { json } from "@sveltejs/kit";
+import type { LiveTransaction } from "$lib/types/transaction";
 
 export const DELETE: RequestHandler = async ({ locals, request }) => {
 	const auth = await locals.auth();
@@ -14,18 +16,23 @@ export const DELETE: RequestHandler = async ({ locals, request }) => {
 		return new Response("Bad request!", { status: 400 });
 	}
 
+	// archive the transaction
+	const liveTransaction: LiveTransaction & { reason: string } | null = await getLiveTransaction(charge_id) as LiveTransaction & { reason: string };
+	if (liveTransaction == null) return new Response("Bad request!", { status: 400 });
+	liveTransaction.charge_id = charge_id;
+	liveTransaction.reason = reason;
+	const { _id } = await archiveLiveTransaction(liveTransaction);
+
 	const del_op = await deleteLiveTransaction(charge_id, product_id, user_id);
 	if (typeof del_op == "boolean" && !del_op) {
 		return new Response("Bad request!", { status: 400 });
 	}
-
-	/*
+	
 	await establishRelationship(auth.user?.id, {
-		relationship_type: "MODERATOR_OPERATION",
-		object_id: undefined,
-		object_type: "LIVE_TRANSACTION",
+		relationship_type: "MODERATOR_ACTION",
+		object_id: _id,
+		established_at: new Date(Date.now()),
 	});
-	*/
-	// MAKE THE OBJECT OF LIVE TRANSACTIONS IN THE MONGODB...
+	
 	return json({ deleted: true });
 };
