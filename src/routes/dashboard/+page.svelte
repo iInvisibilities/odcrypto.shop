@@ -109,6 +109,7 @@
 	};
 
 	let liveTransactionsSection: LiveTransactionWithUsernames | undefined = $state(undefined);
+	let filteredLiveTransactionsSection: LiveTransactionWithUsernames | undefined = $state(undefined);
 
 	onMount(async () => {
 		fetchAllWalletOptions();
@@ -117,6 +118,7 @@
 			const response = await request.json();
 			if (response?.live_transactions_with_usernames) {
 				liveTransactionsSection = response.live_transactions_with_usernames as LiveTransactionWithUsernames;
+				filteredLiveTransactionsSection = response.live_transactions_with_usernames as LiveTransactionWithUsernames;
 				push_not("You're a super user, you can see current live transactions.");
 			}
 		}
@@ -155,13 +157,30 @@
 			push_not('Could not cancel transaction, ' + (await del_req.text()));
 		}
 	}
+
+	export const filter_live_transactions = (transactions: LiveTransactionWithUsernames, search: string) => {
+		if (!search || search.trim().length == 0) return transactions;
+		return transactions.filter((transaction) => {
+			const user = transaction.user.username.toLowerCase();
+			const product = transaction.product.product_name.toLowerCase();
+			const date = new Date(transaction.time_created).toLocaleString().toLowerCase();
+			const searchLower = search.toLowerCase();
+			return user.includes(searchLower) || product.includes(searchLower) || date.includes(searchLower);
+		});
+	};
 </script>
 
-{#if isLiveTransactionsMenuOpen && liveTransactionsSection}
+{#if isLiveTransactionsMenuOpen && filteredLiveTransactionsSection && liveTransactionsSection}
 	<div class="z-20 absolute h-dvh w-dvw text-xl grid items-center justify-center backdrop_eff">
 		<div>
 			<div class="flex w-full backdrop_eff_2">
-				<button class="bg-[#0050ff] text-white py-1 px-3 rounded-tl-md" onclick={async (e) => {
+				<input oninput={
+					e => {
+						if (liveTransactionsSection == undefined) return;
+						filteredLiveTransactionsSection = filter_live_transactions(liveTransactionsSection, (e.target as HTMLInputElement).value);
+					}
+				} type="text" placeholder="Search..." class="py-1 px-2 border-2 border-gray-400 rounded-tl-md outline-none placeholder:text-white text-white" />
+				<button class="bg-[#0050ff] text-white py-1 px-3" onclick={async (e) => {
 					const setDisplayText = (text: string) => {
 						if (e.target == null) return;
 						(e.target as HTMLButtonElement).textContent = text;
@@ -182,9 +201,9 @@
 				}}>Reload</button>
 				<button class="bg-[#FC565E] text-white py-1 px-3 rounded-tr-md" onclick={() => (isLiveTransactionsMenuOpen = false)}>Close</button>
 			</div>
-			<div class="grid gap-2 max-h-72 shadow-lg rounded-md rounded-tl-none *:h-max *:w-max bg-white p-4 overflow-auto backdrop_eff_2">
-				{#if liveTransactionsSection.length > 0}
-					{#each liveTransactionsSection as transaction}
+			<div class="grid gap-2 max-h-72 shadow-lg rounded-b-md *:h-max *:w-max bg-white p-4 overflow-auto backdrop_eff_2">
+				{#if filteredLiveTransactionsSection.length > 0}
+					{#each filteredLiveTransactionsSection as transaction}
 						<div class="flex items-center justify-center gap-2">
 							<div class="flex items-center justify-center gap-1 w-full">
 								<span class="text-gray-500 select-none text-sm">{new Date(transaction.time_created).toLocaleTimeString()}</span>
