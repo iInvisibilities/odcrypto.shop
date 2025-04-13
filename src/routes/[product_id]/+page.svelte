@@ -74,8 +74,22 @@
     }
 
 
-	function reportProduct(event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement; }) {
-		throw new Error("Function not implemented.");
+	export const reportProduct = async (event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement; }) => {
+		const reason = prompt("Please enter a reason for reporting this product:");
+        if (reason && reason.trim().length > 0) {
+            const response = await fetch('/api?type=REPORT&object_id=' + product_id, {
+                method: 'POST',
+                body: JSON.stringify({ reason })
+            });
+            if (response.ok) {
+                push_not("Product reported successfully!");
+            } else {
+                push_not("Failed to report the product.");
+            }
+        }
+        else {
+            push_not("Please enter a valid reason.");
+        }
 	}
 </script>
 
