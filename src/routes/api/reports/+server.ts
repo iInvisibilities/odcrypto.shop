@@ -45,8 +45,10 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     if (!report.reason || report.reason.trim().length == 0) return new Response('Bad request!', { status: 400 });
     if (!report.object_id) return new Response('Bad request!', { status: 400 });
     if (!report.user_id) return new Response('Bad request!', { status: 400 });
-    
+
+    report.user_id = sender_id;
     report.created_at = new Date();
+    
     await createReport(report);
     return new Response('Reported!', { status: 200 });
 }
@@ -62,6 +64,6 @@ export const DELETE: RequestHandler = async ({ request, locals }) => {
 
     const { reports }: { reports: string[] } = await request.json();
     reports.forEach(async (report_id) => await deleteReport(report_id));
-    
+
     return new Response('Deleted!', { status: 200 });
 }

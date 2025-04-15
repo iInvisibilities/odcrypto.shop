@@ -24,16 +24,6 @@ export const POST: RequestHandler = async ({ request, url, locals }) => {
 
 	const product_obj = await getProduct(obj_id);
 	if (!product_obj) return new Response('Bad request!', { status: 400 });
-
-	const type = url.searchParams.get('type');
-	if(type) {
-		if (type == "REPORT") {
-			const { reason } = await request.json();
-			if (!reason || reason.trim().length == 0) return new Response('Bad request!', { status: 400 });
-			
-			return new Response('Reported!', { status: 200 });
-		}
-	}
 	
 	const rlp_obj: Relationship = {
 		relationship_type: 'WISHLISTED',

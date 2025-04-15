@@ -2,6 +2,7 @@
 	import { SignIn } from "@auth/sveltekit/components";
 	import type { PageProps } from "./$types";
     import { page } from '$app/state';
+	import type { Report } from "$lib/types/reports";
 
 
     let { data }: PageProps = $props();
@@ -77,9 +78,16 @@
 	export const reportProduct = async (event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement; }) => {
 		const reason = prompt("Please enter a reason for reporting this product:");
         if (reason && reason.trim().length > 0) {
-            const response = await fetch('/api?type=REPORT&object_id=' + product_id, {
+            const report: Report = {
+                user_id: '',
+                created_at: new Date(Date.now()),
+                object_id: product_id,
+                reason: reason
+            }
+            
+            const response = await fetch('/api/reports', {
                 method: 'POST',
-                body: JSON.stringify({ reason })
+                body: JSON.stringify({ report })
             });
             if (response.ok) {
                 push_not("Product reported successfully!");
