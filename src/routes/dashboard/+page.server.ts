@@ -39,7 +39,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 					);
 				}
 			} 
-			else if (rlp.relationship_type == "MODERATOR_ACTION") {
+			else if (rlp.relationship_type == "DEL_LIVE_TRANSACTION") {
 				let live_transaction_object = await getArchivedTransaction(rlp.object_id?.toString());
 				object = { ...live_transaction_object, _id: live_transaction_object?._id?.toString() } as LiveTransaction & { _id: string };
 				if (!live_transaction_object) {

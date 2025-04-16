@@ -29,7 +29,7 @@ export const DELETE: RequestHandler = async ({ locals, request }) => {
 	}
 	
 	await establishRelationship(auth.user?.id, {
-		relationship_type: "MODERATOR_ACTION",
+		relationship_type: "DEL_LIVE_TRANSACTION",
 		object_id: _id,
 		established_at: new Date(Date.now()),
 	});

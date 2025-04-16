@@ -92,7 +92,7 @@
             if (response.ok) {
                 push_not("Product reported successfully!");
             } else {
-                push_not("Failed to report the product.");
+                push_not("Failed to report the product, " + (await response.text()));
             }
         }
         else {

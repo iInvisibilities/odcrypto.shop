@@ -282,10 +282,10 @@
 				>
 					{#if current_page == undefined}
 						<span class="bg-gray-700 text-white p-1 rounded-md shadow-sm select-none text-sm"
-							>{relation.rlp.relationship_type == "MODERATOR_ACTION" ? "TRANSACTION CANCEL" : relation.rlp.relationship_type}</span
+							>{relation.rlp.relationship_type == "DEL_LIVE_TRANSACTION" ? "TRANSACTION CANCEL" : relation.rlp.relationship_type}</span
 						>
 					{/if}
-					{#if relation.rlp.relationship_type != "MODERATOR_ACTION"}
+					{#if relation.rlp.relationship_type != "DEL_LIVE_TRANSACTION"}
 						<div class="flex items-center justify-around w-max gap-2 min-w-max">
 							<span class={(relation.object as Product).deleted ? 'opacity-50 line-through' : ''}
 								>{(relation.object as Product).name}</span
