@@ -1,7 +1,9 @@
 import type { RequestHandler } from "@sveltejs/kit";
 import { json } from "@sveltejs/kit";
 import type { Report } from "$lib/types/reports";
-import { createReport, deleteReport, getReportsOfObject, getReportsOfUser } from "$lib/server/database/db_man/reports";
+import { createReport, deleteReport, getReportsOfObject, getReportsOfUser, markReportAs } from "$lib/server/database/db_man/reports";
+import { establishRelationship } from "$lib/server/database/db_man/object_relationships";
+import { ManageReportType } from "$lib/types/moderator_actions";
 
 export const GET: RequestHandler = async ({ url, locals }) => {
     const auth = await locals.auth();
@@ -34,11 +36,36 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     return json({ chosen_type, reports });
 }
 
-export const POST: RequestHandler = async ({ request, locals }) => {
+export const POST: RequestHandler = async ({ request, locals, url }) => {
     const auth = await locals.auth();
     if (!auth) return new Response('Unauthorized!', { status: 401 });
     const sender_id = auth.user?.id;
     if (!sender_id) return new Response('Unauthorized!', { status: 401 });
+
+    const is_super_command = url.searchParams.get('admin_command');
+    const command:string | null = url.searchParams.get('command');
+    if(is_super_command && command) {
+        const is_super = (auth.user as Record<string, any>).is_super;
+        if (!is_super) return new Response("Unauthorized!", { status: 401 });
+        
+        if (command in ManageReportType) {
+            const { report_id } = await request.json();
+            if (!report_id) return new Response('Bad request!', { status: 400 });
+            if (command == ManageReportType.DELETE_REPORT) {
+                const is_deleted = await deleteReport(report_id);
+                return new Response(is_deleted ? 'Deleted!' : 'Not deleted.', { status: 200 });
+            }
+            else if (command == ManageReportType.MARK_AS_DEALT_WITH) {
+                const is_marked = await markReportAs(report_id, "DEALT_WITH");
+                return new Response(is_marked ? 'Marked as dealt with!' : 'Not marked.', { status: 200 });
+            }
+            else if (command == ManageReportType.MARK_AS_IGNORED) {
+                const is_marked = await markReportAs(report_id, "DEALT_WITH");
+                return new Response(is_marked ? 'Marked as ignored!' : 'Not marked.', { status: 200 });
+            }
+        }
+        return new Response('Bad request!', { status: 400 });
+    }
 
     const { report }: { report: Report } = await request.json();
     if (!report) return new Response('Bad request!', { status: 400 });
@@ -48,22 +75,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
     report.user_id = sender_id;
     report.created_at = new Date();
+    report.status = "ACTIVE";
     
-    await createReport(report);
+    const createdReportObj = await createReport(report);
+    await establishRelationship(sender_id, {
+        relationship_type: "POST_REPORT",
+        object_id: createdReportObj._id,
+        established_at: new Date(Date.now()),
+    });
+
     return new Response('Reported!', { status: 200 });
-}
-
-export const DELETE: RequestHandler = async ({ request, locals }) => {
-    const auth = await locals.auth();
-    if (!auth) return new Response('Unauthorized!', { status: 401 });
-    const sender_id = auth.user?.id;
-    if (!sender_id) return new Response('Unauthorized!', { status: 401 });
-
-    const is_super = (auth.user as Record<string, any>).is_super;
-	if (!is_super) return new Response("Unauthorized!", { status: 401 });
-
-    const { reports }: { reports: string[] } = await request.json();
-    reports.forEach(async (report_id) => await deleteReport(report_id));
-
-    return new Response('Deleted!', { status: 200 });
 }

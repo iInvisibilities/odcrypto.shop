@@ -2,6 +2,7 @@ import { MONGODB_NAME, MONGODB_REPORTS_COLLECTION } from '$env/static/private';
 import client from '../mongodb';
 import type { Report } from '$lib/types/reports';
 import { ObjectId } from 'mongodb';
+import type { ReportStatus } from '$lib/types/moderator_actions';
 
 const coll = client.db(MONGODB_NAME).collection<Report>(MONGODB_REPORTS_COLLECTION);
 
@@ -30,4 +31,9 @@ export const deleteReport = async (_id: string): Promise<boolean> => {
 export const deleteReports = async (user_id: string): Promise<boolean> => {
     const result = await coll.deleteMany({ user_id: user_id });
     return result.deletedCount === 1;
+}
+
+export const markReportAs = async (_id: string, status: ReportStatus): Promise<boolean> => {
+    const result = await coll.updateOne({ _id: new ObjectId(_id) }, { $set: { status: status } });
+    return result.modifiedCount === 1;
 }
