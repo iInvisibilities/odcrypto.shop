@@ -1,9 +1,11 @@
 import type { RequestHandler } from "@sveltejs/kit";
 import { json } from "@sveltejs/kit";
 import type { Report } from "$lib/types/reports";
-import { createReport, deleteReport, getReportsOfObject, getReportsOfUser, markReportAs } from "$lib/server/database/db_man/reports";
+import { createReport, deleteReport, getReport, getReportsOfObject, getReportsOfUser, markReportAs } from "$lib/server/database/db_man/reports";
 import { establishRelationship } from "$lib/server/database/db_man/object_relationships";
 import { ManageReportType } from "$lib/types/moderator_actions";
+import { getProduct } from "$lib/server/database/db_man/products";
+import { ObjectId } from "mongodb";
 
 export const GET: RequestHandler = async ({ url, locals }) => {
     const auth = await locals.auth();
@@ -44,13 +46,21 @@ export const POST: RequestHandler = async ({ request, locals, url }) => {
 
     const is_super_command = url.searchParams.get('admin_command');
     const command:string | null = url.searchParams.get('command');
-    if(is_super_command && command) {
+    if(is_super_command) {
+        if (!command) return new Response('No command specified!', { status: 400 });
+        if (!command.trim().length) return new Response('No command specified!', { status: 400 });
+
         const is_super = (auth.user as Record<string, any>).is_super;
         if (!is_super) return new Response("Unauthorized!", { status: 401 });
         
         if (command in ManageReportType) {
             const { report_id } = await request.json();
             if (!report_id) return new Response('Bad request!', { status: 400 });
+            if (!ObjectId.isValid(report_id)) return new Response('Bad report id!', { status: 400 });
+            
+            const report = await getReport(report_id);
+            if (!report) return new Response('Report not found!', { status: 400 });
+
             if (command == ManageReportType.DELETE_REPORT) {
                 const is_deleted = await deleteReport(report_id);
                 return new Response(is_deleted ? 'Deleted!' : 'Not deleted.', { status: 200 });
@@ -60,18 +70,22 @@ export const POST: RequestHandler = async ({ request, locals, url }) => {
                 return new Response(is_marked ? 'Marked as dealt with!' : 'Not marked.', { status: 200 });
             }
             else if (command == ManageReportType.MARK_AS_IGNORED) {
-                const is_marked = await markReportAs(report_id, "DEALT_WITH");
+                const is_marked = await markReportAs(report_id, "IGNORED");
                 return new Response(is_marked ? 'Marked as ignored!' : 'Not marked.', { status: 200 });
             }
         }
-        return new Response('Bad request!', { status: 400 });
-    }
 
-    const { report }: { report: Report } = await request.json();
+        return new Response('Bad command choice!', { status: 400 });
+    }
+    
+    let { report }: { report: Report } = await request.json();
     if (!report) return new Response('Bad request!', { status: 400 });
     if (!report.reason || report.reason.trim().length == 0) return new Response('Bad request!', { status: 400 });
     if (!report.object_id) return new Response('Bad request!', { status: 400 });
-    if (!report.user_id) return new Response('Bad request!', { status: 400 });
+
+    const product = await getProduct(report.object_id);
+    if (!product) return new Response('Bad product!', { status: 400 });
+    if (product.deleted) return new Response('Bad product!', { status: 400 });
 
     report.user_id = sender_id;
     report.created_at = new Date();

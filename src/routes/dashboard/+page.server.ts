@@ -12,6 +12,8 @@ import type { SERWallet } from '$lib/types/wallet';
 import type { SERRelationship } from '$lib/types/object_relationships';
 import type { LiveTransaction } from '$lib/types/transaction';
 import { getArchivedTransaction } from '$lib/server/database/db_man/archived_live_transactions';
+import { getReport } from '$lib/server/database/db_man/reports';
+import type { Report } from '$lib/types/reports';
 
 export const ssr = true;
 
@@ -27,38 +29,50 @@ export const load: PageServerLoad = async ({ locals }) => {
 		relations: user_object_relationships.relations.map(async (rlp) => {
 			if (!rlp.object_id) return null;
 
-			let object: SERProduct | SERWallet | LiveTransaction | null;
+			let object: SERProduct | SERWallet | LiveTransaction | Report | null;
 			if (rlp.relationship_type == 'WALLET') {
 				let wallet_object = await getWallet(rlp.object_id?.toString());
-				object = { ...wallet_object, _id: wallet_object?._id?.toString() } as SERWallet;
 				if (!wallet_object) {
 					await deleteEstablishedRelationship(
 						session.user?.id ?? '',
 						rlp.object_id?.toString() ?? '',
 						rlp.relationship_type
 					);
-				}
+					object = null;
+				} else object = { ...wallet_object, _id: wallet_object?._id?.toString() } as SERWallet;
 			} 
 			else if (rlp.relationship_type == "DEL_LIVE_TRANSACTION") {
 				let live_transaction_object = await getArchivedTransaction(rlp.object_id?.toString());
-				object = { ...live_transaction_object, _id: live_transaction_object?._id?.toString() } as LiveTransaction & { _id: string };
 				if (!live_transaction_object) {
 					await deleteEstablishedRelationship(
 						session.user?.id ?? '',
 						rlp.object_id?.toString() ?? '',
 						rlp.relationship_type
 					);
-				}
-			} else {
-				let product_object = await getProduct(rlp.object_id?.toString());
-				object = { ...product_object, _id: product_object?._id?.toString() } as SERProduct;
-				if (!product_object || (rlp.relationship_type == 'WISHLISTED' && object.deleted)) {
+					object = null;
+				} else object = { ...live_transaction_object, _id: live_transaction_object?._id?.toString() } as LiveTransaction & { _id: string };
+			}
+			else if (rlp.relationship_type == "MANAGE_REPORT" || rlp.relationship_type == "POST_REPORT") {
+				let report_object = await getReport(rlp.object_id?.toString());
+				if (!report_object) {
 					await deleteEstablishedRelationship(
 						session.user?.id ?? '',
 						rlp.object_id?.toString() ?? '',
 						rlp.relationship_type
 					);
-				}
+					object = null;
+				} else object = { ...report_object, _id: report_object?._id?.toString() } as Report & { _id: string };
+			}
+			else {
+				let product_object = await getProduct(rlp.object_id?.toString());
+				if (!product_object || (rlp.relationship_type == 'WISHLISTED' && product_object.deleted)) {
+					await deleteEstablishedRelationship(
+						session.user?.id ?? '',
+						rlp.object_id?.toString() ?? '',
+						rlp.relationship_type
+					);
+					object = null;
+				} else object = { ...product_object, _id: product_object?._id?.toString() } as SERProduct;
 			}
 
 			return {

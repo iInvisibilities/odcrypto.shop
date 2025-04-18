@@ -3,6 +3,7 @@
 	import type { EPInformation, Product, SERProduct } from '$lib/types/product';
 	import type { LiveTransaction } from '$lib/types/transaction';
 	import type { SERWallet, Wallet } from '$lib/types/wallet';
+	import type { Report } from '$lib/types/reports';
 	import { onMount } from 'svelte';
 
 	let {
@@ -14,7 +15,7 @@
 	}: {
 		rlp: Promise<{
 			rlp: SERRelationship;
-			object: SERProduct | SERWallet | LiveTransaction;
+			object: SERProduct | SERWallet | LiveTransaction | Report;
 		} | null>;
 		current_page: string | undefined;
 		push_not: (msg: string) => void;
@@ -25,11 +26,11 @@
 	let relation:
 		| Promise<{
 				rlp: SERRelationship;
-				object: SERProduct | SERWallet | LiveTransaction;
+				object: SERProduct | SERWallet | LiveTransaction | Report;
 		  } | null>
 		| {
 				rlp: SERRelationship;
-				object: SERProduct | SERWallet | LiveTransaction;
+				object: SERProduct | SERWallet | LiveTransaction | Report;
 		  }
 		| null = $state(rlp);
 
@@ -193,6 +194,13 @@
 	function show_live_transaction_info(arg0: LiveTransaction & { reason: string; }) {
 		alert('Transaction cancelled at ' + new Date(arg0.time_created).toLocaleString() + '\nCharge ID: ' + arg0.charge_id + '\nUser ID: ' + arg0.user_id + '\nProduct ID: ' + arg0.product_id + '\nReason: ' + arg0.reason);
 	}
+
+	function show_report_info(arg0: Report & { reason: string; }) {
+		const c = confirm('Report created at ' + new Date(arg0.created_at).toLocaleString() + '\nStatus: ' + arg0.status + '\nReported ' + arg0.object_id + '\nReason: ' + arg0.reason + '\nGo to reported product page?');
+		if (c) {
+			window.open('/' + arg0.object_id, '_blank');
+		}
+	}
 </script>
 
 {#if product_info}
@@ -282,10 +290,10 @@
 				>
 					{#if current_page == undefined}
 						<span class="bg-gray-700 text-white p-1 rounded-md shadow-sm select-none text-sm"
-							>{relation.rlp.relationship_type == "DEL_LIVE_TRANSACTION" ? "TRANSACTION CANCEL" : relation.rlp.relationship_type}</span
+							>{relation.rlp.relationship_type == "DEL_LIVE_TRANSACTION" ? "TRANSACTION CANCEL" : relation.rlp.relationship_type.replaceAll("_", " ")}</span
 						>
 					{/if}
-					{#if relation.rlp.relationship_type != "DEL_LIVE_TRANSACTION"}
+					{#if relation.rlp.relationship_type != "DEL_LIVE_TRANSACTION" && !relation.rlp.relationship_type.includes("REPORT")}
 						<div class="flex items-center justify-around w-max gap-2 min-w-max">
 							<span class={(relation.object as Product).deleted ? 'opacity-50 line-through' : ''}
 								>{(relation.object as Product).name}</span
@@ -297,10 +305,15 @@
 								>
 							{/if}
 						</div>
-					{:else}
+					{:else if relation.rlp.relationship_type == "DEL_LIVE_TRANSACTION"}
 						<button onclick={() => {
 							if (relation == null || relation instanceof Promise) return;
 							show_live_transaction_info(relation.object as LiveTransaction & { reason: string })
+						}} class="p-1 py-0.5 rounded-md transition-all duration-150 hover:opacity-85 cursor-pointer select-none bg-blue-600">Click to view</button>
+					{:else if relation.rlp.relationship_type.includes("REPORT")}
+						<button onclick={() => {
+							if (relation == null || relation instanceof Promise) return;
+							show_report_info(relation.object as Report & { reason: string })
 						}} class="p-1 py-0.5 rounded-md transition-all duration-150 hover:opacity-85 cursor-pointer select-none bg-blue-600">Click to view</button>
 					{/if}
 					<span class="opacity-75 md:text-sm text-xs min-w-max mx-2 select-none"
