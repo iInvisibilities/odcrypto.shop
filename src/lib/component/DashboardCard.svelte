@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { SERRelationship } from '$lib/types/object_relationships';
+	import type { RelationshipType, SERRelationship } from '$lib/types/object_relationships';
 	import type { EPInformation, Product, SERProduct } from '$lib/types/product';
 	import type { LiveTransaction } from '$lib/types/transaction';
 	import type { SERWallet, Wallet } from '$lib/types/wallet';
@@ -11,7 +11,8 @@
 		current_page,
 		push_not,
 		deleted_object_elements,
-		wallets = $bindable([])
+		wallets = $bindable([]),
+		decount_rlp
 	}: {
 		rlp: Promise<{
 			rlp: SERRelationship;
@@ -21,6 +22,7 @@
 		push_not: (msg: string) => void;
 		deleted_object_elements: (string | null)[];
 		wallets: SERWallet[];
+		decount_rlp: (rlp: RelationshipType) => void;
 	} = $props();
 
 	let relation:
@@ -142,6 +144,8 @@
 							' successfully!'
 					);
 					deleted_object_elements.push(relation.object._id ?? null);
+					decount_rlp(relation.rlp.relationship_type);
+
 					if (own_dom) own_dom.remove();
 				} else {
 					push_not(
@@ -186,6 +190,8 @@
 		if (del_request.status == 200) {
 			push_not((relation.object as SERWallet).type + ' wallet deleted successfully!');
 			deleted_object_elements.push((relation.object as SERWallet)._id ?? null);
+			decount_rlp(relation.rlp.relationship_type);
+			
 			if (own_dom) own_dom.remove();
 		} else push_not('Could not delete wallet!');
 	}
@@ -200,6 +206,30 @@
 		if (c) {
 			window.open('/' + arg0.object_id, '_blank');
 		}
+	}
+
+	const delete_report = async (_id: string | undefined): Promise<void> => {
+		if (!relation || relation instanceof Promise) return;
+		if (!confirm('Are you sure?')) return;
+
+		const del_request = await fetch(
+			'/api/reports?admin_command=true&command=DELETE_REPORT',
+			{
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ report_id: _id })
+			}
+		);
+
+		if (del_request.status == 200) {
+			push_not('Report deleted successfully!');
+			deleted_object_elements.push(_id ?? null);
+			decount_rlp(relation.rlp.relationship_type);
+
+			if (own_dom) own_dom.remove();
+		} else push_not('Could not delete report, ' + (await del_request.text()));
 	}
 </script>
 
@@ -274,17 +304,17 @@
 						? 'bg-fuchsia-500'
 						: current_page == 'BOUGHT'
 							? 'bg-green-700'
-							: 'bg-gray-900'} text-white rounded-lg flex items-center justify-between p-2 mx-2 shadow-lg my-1 {current_page &&
+							: 'bg-gray-900'} text-white rounded-lg flex items-center justify-between p-2 mx-2 shadow-lg my-1 {current_page && current_page != "POST_REPORT" &&
 				!(relation.object as Product).deleted
 					? 'hover:outline-4 hover:cursor-pointer'
 					: ''} xl:w-2/3"
 			>
 				<a
-					href={current_page && !(relation.object as Product).deleted
+					href={current_page && current_page != "POST_REPORT" && !(relation.object as Product).deleted
 						? '/' + ((relation.object as Product)._id?.toString() ?? '')
 						: undefined}
-					target={current_page && !(relation.object as Product).deleted ? '_blank' : '_self'}
-					class="{!current_page
+					target={current_page && current_page != "POST_REPORT" && !(relation.object as Product).deleted ? '_blank' : undefined}
+					class="{!current_page || current_page == "POST_REPORT"
 						? 'flex gap-2 items-center flex-wrap'
 						: 'grid'} overflow-auto overflow-y-auto w-full"
 				>
@@ -311,6 +341,9 @@
 							show_live_transaction_info(relation.object as LiveTransaction & { reason: string })
 						}} class="p-1 py-0.5 rounded-md transition-all duration-150 hover:opacity-85 cursor-pointer select-none bg-blue-600">Click to view</button>
 					{:else if relation.rlp.relationship_type.includes("REPORT")}
+						{#if current_page == "POST_REPORT"}
+							<span class="{["ACTIVE", "DEALT_WITH"].includes((relation.object as Report).status) ? "bg-green-300 text-black" : "bg-yellow-500/50 text-gray-200"} p-1 py-0.5 rounded-md">{(relation.object as Report).status.replaceAll("_", " ")}</span>
+						{/if}
 						<button onclick={() => {
 							if (relation == null || relation instanceof Promise) return;
 							show_report_info(relation.object as Report & { reason: string })
@@ -320,7 +353,7 @@
 						>@ {relation.rlp.established_at}</span
 					>
 				</a>
-				{#if current_page == 'POSTED' || current_page == 'WISHLISTED' || current_page == 'BOUGHT'}
+				{#if current_page == 'POSTED' || current_page == 'WISHLISTED' || current_page == 'BOUGHT' || current_page == "POST_REPORT"}
 					{#if current_page == 'POSTED'}
 						<button
 							onclick={() => operate_upon(current_page, true)}
@@ -352,24 +385,34 @@
 							<img src="edit.svg" class="w-5 invert" alt="" />
 						</button>
 					{/if}
-					<button
-						onclick={() => operate_upon(current_page)}
-						class="{current_page == 'POSTED'
-							? 'bg-[#FC565E]'
-							: current_page == 'WISHLISTED'
-								? 'bg-gray-700'
-								: 'bg-green-800'} rounded-md w-max p-[.3rem] cursor-pointer hover:scale-95 transition-all active:scale-90 shadow-md"
-					>
-						<img
-							src="{current_page == 'POSTED'
-								? 'delete'
+					{#if current_page == "POST_REPORT"}
+						<button onclick={() => {
+							if (relation == null || relation instanceof Promise) return;
+							delete_report((relation.object as Report)._id?.toString());
+						}} class="bg-[#FC565E] rounded-md w-max p-[.3rem] cursor-pointer hover:scale-95 transition-all active:scale-90 shadow-md">
+							<img src="delete.svg" class="w-5 invert" alt="" />
+						</button>
+					{:else}
+						<button
+							onclick={() => operate_upon(current_page)}
+							class="{current_page == 'POSTED'
+								? 'bg-[#FC565E]'
 								: current_page == 'WISHLISTED'
-									? 'dewishlist'
-									: 'download'}.svg"
-							class="w-5 invert"
-							alt=""
-						/></button
-					>
+									? 'bg-gray-700'
+									: 'bg-green-800'} rounded-md w-max p-[.3rem] cursor-pointer hover:scale-95 transition-all active:scale-90 shadow-md"
+						>
+							<img
+								src="{current_page == 'POSTED'
+									? 'delete'
+									: current_page == 'WISHLISTED'
+										? 'dewishlist'
+										: 'download'}.svg"
+								class="w-5 invert"
+								alt=""
+							/></button
+						>
+					{/if}
+					
 				{/if}
 			</div>
 		{:else if relation.rlp.relationship_type == 'WALLET'}
@@ -386,7 +429,7 @@
 					{#if current_page == 'WALLET'}
 						<button
 							onclick={delete_wallet}
-							class="block md:hidden bg-[#FC565E] rounded-md w-max p-[.3rem] cursor-pointer hover:scale-95 transition-all active:scale-90 shadow-md"
+							class="block bg-[#FC565E] rounded-md w-max p-[.3rem] cursor-pointer hover:scale-95 transition-all active:scale-90 shadow-md"
 						>
 							<img src="delete.svg" class="w-5 invert" alt="" /></button
 						>
@@ -396,15 +439,6 @@
 						>@ {relation.rlp.established_at}</span
 					>
 				</div>
-
-				{#if current_page == 'WALLET'}
-					<button
-						onclick={delete_wallet}
-						class="hidden md:block bg-[#FC565E] rounded-md w-max p-[.3rem] cursor-pointer hover:scale-95 transition-all active:scale-90 shadow-md"
-					>
-						<img src="delete.svg" class="w-5 invert" alt="" /></button
-					>
-				{/if}
 			</div>
 		{/if}
 	{/if}

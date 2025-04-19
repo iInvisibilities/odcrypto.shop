@@ -80,6 +80,7 @@
         if (reason && reason.trim().length > 0) {
             const report: Report = {
                 user_id: '',
+                status: 'ACTIVE',
                 created_at: new Date(Date.now()),
                 object_id: product_id,
                 reason: reason

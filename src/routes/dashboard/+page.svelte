@@ -8,9 +8,10 @@
 	import { onMount } from 'svelte';
 	import type { LiveTransactionWithUsernames } from '$lib/types/transaction';
 
-	let { data }: PageProps = $props();
+	let { data = $bindable() }: PageProps = $props();
 
 	let relations_data = $state(data.relations);
+	let counts = $state(data.page_item_count);
 
 	let current_page: RelationshipType | undefined = $state();
 	const deleted_object_elements: (string | null)[] = [];
@@ -61,7 +62,7 @@
 
 	let wallets: SERWallet[] = $state([]);
 
-	async function try_submit_new_wallet() {
+	const try_submit_new_wallet = async () => {
 		is_adding_wallet = false;
 		push_not('Please wait...');
 
@@ -89,8 +90,14 @@
 				Promise.resolve({
 					rlp: new_wallet.serializable_established_rlp as SERRelationship,
 					object: wallet
-				})
+				}) as never
 			);
+			if (counts) {
+				counts.push({
+					key: 'WALLET',
+					count: (counts.find((val) => val.key == 'WALLET')?.count ?? 0) + 1
+				});
+			}
 			wallets.push(wallet);
 		} else {
 			push_not('Could not link wallet, ' + (await request.text()));
@@ -123,6 +130,15 @@
 			}
 		}
 	});
+
+	export const decount_rlp = (rlp_type: RelationshipType) => {
+		if(!counts) return;
+		const index = counts.findIndex((val) => val.key == rlp_type);
+		if (index != -1) {
+			counts[index].count--;
+			if (counts[index].count <= 0) counts.splice(index, 1);
+		}
+	}
 
 	let isLiveTransactionsMenuOpen = $state(false);
 	function showLiveTransactionsMenu(event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement; }) {
@@ -273,6 +289,7 @@
 			>Wishlist</DashboardBtn
 		>
 		<DashboardBtn {onclick} onmount={() => {}} src="wallet.svg" val="WALLET">Wallets</DashboardBtn>
+		<DashboardBtn {onclick} onmount={() => {}} src="report.svg" val="POST_REPORT">Reports</DashboardBtn>
 		<DashboardBtn {onclick} {onmount} src="history-log.svg" val="HISTORY">History</DashboardBtn>
 		{#if liveTransactionsSection}
 			<button onclick={showLiveTransactionsMenu} class="hover:opacity-75 cursor-default w-full opacity-80 border-b-2 inline-flex select-none gap-2 text-lg items-center px-4 py-2 text-white bg-fuchsia-700 active min-w-[150px]"><img class="invert" width="25" src="live.svg" alt="">Live transactions</button>
@@ -290,7 +307,7 @@
 			>
 		</SignOut>
 	</ul>
-	<div class="p-6 bg-gray-50 text-medium text-gray-500 dark:text-gray-400 dark:bg-gray-800 w-full">
+	<div class="relative p-6 bg-gray-50 text-medium text-gray-500 dark:text-gray-400 dark:bg-gray-800 w-full min-h-dvh">
 		{#if !relations_data || relations_data.length == 0}
 			{#if current_page == 'WALLET'}
 				<div class="text-md md:text-xl">
@@ -301,7 +318,7 @@
 					>
 				</div>
 			{:else}
-				Empty!
+				<img src="box.png" class="absolute invert opacity-30 inset-0 m-auto w-1/4" alt="">	
 			{/if}
 		{:else}
 			<div class="flex w-full justify-between items-center flex-wrap gap-2">
@@ -326,17 +343,22 @@
 					</div>
 				{/if}
 			</div>
-			<div class={current_page == 'WALLET' ? 'mt-4' : ''}>
-				{#each relations_data as _, i}
-					<DashboardCard
-						{deleted_object_elements}
-						{push_not}
-						bind:rlp={relations_data[i]}
-						{current_page}
-						{wallets}
-					/>
-				{/each}
-			</div>
+			{#if counts && current_page && !counts.findLast((val) => val.key == current_page)}
+				<img src="box.png" class="absolute invert opacity-30 inset-0 m-auto w-1/4" alt="">	
+			{:else}
+				<div class={current_page == 'WALLET' ? 'mt-4' : ''}>
+					{#each relations_data as _, i}
+						<DashboardCard
+							{deleted_object_elements}
+							{push_not}
+							bind:rlp={relations_data[i]}
+							{current_page}
+							{wallets}
+							{decount_rlp}
+						/>
+					{/each}
+				</div>
+			{/if}
 		{/if}
 	</div>
 </div>

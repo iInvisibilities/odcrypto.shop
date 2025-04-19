@@ -9,7 +9,7 @@ import {
 import { getWallet } from '$lib/server/database/db_man/wallets';
 import type { SERProduct } from '$lib/types/product';
 import type { SERWallet } from '$lib/types/wallet';
-import type { SERRelationship } from '$lib/types/object_relationships';
+import type { RelationshipType, SERRelationship } from '$lib/types/object_relationships';
 import type { LiveTransaction } from '$lib/types/transaction';
 import { getArchivedTransaction } from '$lib/server/database/db_man/archived_live_transactions';
 import { getReport } from '$lib/server/database/db_man/reports';
@@ -25,7 +25,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const user_object_relationships = await getRelationshipsHolderOf(session.user?.id ?? '');
 	if (!user_object_relationships) return { relations: [] };
 
+	const rlp_groups = Object.groupBy(user_object_relationships.relations, (rlp) => rlp.relationship_type);
+	
+	const rlp_group_keys = Object.keys(rlp_groups);
+	const rlp_group_values = Object.values(rlp_groups).map((rlp) => rlp.length);
+
 	return {
+		page_item_count: rlp_group_keys.map((key, index) => ({ key: key as RelationshipType, count: rlp_group_values[index] })),
 		relations: user_object_relationships.relations.map(async (rlp) => {
 			if (!rlp.object_id) return null;
 
@@ -80,5 +86,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 				object: object as SERProduct | SERWallet | LiveTransaction & { _id: string },
 			};
 		})
-	};
+	} as {
+		page_item_count: { key: RelationshipType; count: number }[];
+		relations: Promise<{
+			rlp: SERRelationship;
+			object: SERProduct | SERWallet | (LiveTransaction & {
+				_id: string;
+			});
+		} | null>[];
+	}
 };
