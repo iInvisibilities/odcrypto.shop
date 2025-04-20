@@ -8,6 +8,7 @@
 	import { onMount } from 'svelte';
 	import type { LiveTransactionWithUsernames } from '$lib/types/transaction';
 	import type { Report } from '$lib/types/reports';
+	import { ManageReportType } from '$lib/types/moderator_actions';
 
 	let { data = $bindable() }: PageProps = $props();
 
@@ -227,7 +228,7 @@
 		selected_reports_to_manage = [];
 		selected_reports_to_manage_count = 0;
 		reports_search_box_indicator?.classList.add('searching');
-		
+
 		const search_request = await fetch('/api/reports?' + search_type + '=' + search_value, {
 			method: 'GET'
 		});
@@ -270,7 +271,7 @@
 	}
 
 
-	function close_reports_gui(event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement; }) {
+	function close_reports_gui() {
 		document.removeEventListener("keyup", actOnEnter);
 		reports_gui_open = false;
 		search_value = '';
@@ -282,13 +283,47 @@
 		selected_reports_to_manage_count = 0;
 		if (reports_search_box_indicator) reports_search_box_indicator.classList.remove('searching');
 	}
+
+
+	const mark_selected_reports_as = async (event: Event & { currentTarget: EventTarget & HTMLSelectElement; }) => {
+		if (selected_reports_to_manage.length == 0) return;
+		const selected_value = event.currentTarget.value;
+		if (!selected_value.length) return;
+
+		if(!confirm('Are you sure you want to change ' + selected_reports_to_manage_count + ' report' + (selected_reports_to_manage_count == 1 ? '' : 's') + '?')) return;
+		
+		const mark_request = await fetch('/api/reports?admin_command=true&command=' + selected_value, {
+			method: 'POST',
+			body: JSON.stringify({
+				report_ids: selected_reports_to_manage.map((report) => report._id?.toString() ?? ""), 
+			}),
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		});
+
+		close_reports_gui();
+		if (mark_request.status == 200) {
+			push_not('Action completed successfully!');
+		} else {
+			push_not(await mark_request.text());
+		}
+	}
 </script>
 
 {#if reports_gui_open}
 	<div class="z-20 absolute h-dvh w-dvw text-xl grid items-center justify-center backdrop_eff">
 		<div class="w-full">
 			<div class="flex w-full backdrop_eff_2">
-				<button class="bg-[#FC565E] text-white py-1 px-3 rounded-t-md" onclick={close_reports_gui}>Close</button>
+				<button class="bg-[#FC565E] text-white py-1 px-3 rounded-t-md {selected_reports_to_manage_count > 0 ? "rounded-tr-none" : ""}" onclick={close_reports_gui}>Close</button>
+				{#if selected_reports_to_manage_count > 0}
+					<select oninput={mark_selected_reports_as} class="bg-green-700 *:bg-white text-white py-1 px-3 rounded-t-md rounded-tl-none">
+						<option selected value="" disabled>Manage reports</option>
+						{#each Object.keys(ManageReportType) as type}
+							<option value={type} class="text-black">{type.toLocaleLowerCase().replaceAll("_", " ")}</option>
+						{/each}
+					</select>
+				{/if}
 			</div>
 			<div class="gap-2 max-h-[700px] h-[500px] w-[700px] shadow-lg rounded-b-md rounded-tr-md bg-white p-4 overflow-auto backdrop_eff_2">
 				<div class="mb-2 w-full">

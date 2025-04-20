@@ -72,68 +72,90 @@ export const POST: RequestHandler = async ({ request, locals, url }) => {
         if (!command) return new Response('No command specified!', { status: 400 });
         if (!command.trim().length) return new Response('No command specified!', { status: 400 });
         
-        if (command in ManageReportType) {
-            const { report_id } = await request.json();
-            if (!report_id) return new Response('Bad request!', { status: 400 });
-            if (!ObjectId.isValid(report_id)) return new Response('Bad report id!', { status: 400 });
+        if (Object.keys(ManageReportType).includes(command)) {
+            const { report_ids }: { report_ids:string[] } = await request.json();
+            if (!report_ids) return new Response('Bad request!', { status: 400 });
+
+            let errors_occurred = 0;
+            report_ids.forEach(async (report_id: string) => {
+                if (!ObjectId.isValid(report_id)) {
+                    errors_occurred++;
+                    return;
+                }
             
-            const is_super = (auth.user as Record<string, any>).is_super;
+                const is_super = (auth.user as Record<string, any>).is_super;
 
-            const report = await getReport(report_id);
-            if (!report) return new Response('Report not found!', { status: 400 });
-
-            if (command == ManageReportType.DELETE_REPORT) {
-                const is_user:boolean = await is_the_one_who_posted_this_report(sender_id, report_id);
-
-                if (!is_super && !is_user) return new Response("Unauthorized!", { status: 401 });
-                const is_deleted = await deleteReport(report_id);
-
-                if (is_deleted && !is_user) {
-                    await establishRelationship(sender_id, {
-                        relationship_type: "MANAGE_REPORT",
-                        object_id: report_id,
-                        established_at: new Date(Date.now()),
-                    });
-                }
-                else if (is_deleted && is_user) {
-                    await deleteEstablishedRelationship(
-                        sender_id,
-                        report_id,
-                        "POST_REPORT"
-                    );
+                const report = await getReport(report_id);
+                if (!report) {
+                    errors_occurred++;
+                    return;
                 }
 
-                return new Response(is_deleted ? 'Deleted!' : 'Not deleted.', { status: 200 });
-            }
-            else if (command == ManageReportType.MARK_AS_DEALT_WITH) {
-                if (!is_super) return new Response("Unauthorized!", { status: 401 });
-                const is_marked = await markReportAs(report_id, "DEALT_WITH");
-                if (is_marked) {
-                    await establishRelationship(sender_id, {
-                        relationship_type: "MANAGE_REPORT",
-                        object_id: report_id,
-                        established_at: new Date(Date.now()),
-                    });
-                }
+                if (command == ManageReportType.DELETE_REPORT) {
+                    const is_user:boolean = await is_the_one_who_posted_this_report(sender_id, report_id);
 
-                return new Response(is_marked ? 'Marked as dealt with!' : 'Not marked.', { status: 200 });
-            }
-            else if (command == ManageReportType.MARK_AS_IGNORED) {
-                if (!is_super) return new Response("Unauthorized!", { status: 401 });
-                const is_marked = await markReportAs(report_id, "IGNORED");
-                if (is_marked) {
-                    await establishRelationship(sender_id, {
-                        relationship_type: "MANAGE_REPORT",
-                        object_id: report_id,
-                        established_at: new Date(Date.now()),
-                    });
-                }
+                    if (!is_super && !is_user) {
+                        errors_occurred++;
+                        return;
+                    }
+                    const is_deleted = await deleteReport(report_id);
 
-                return new Response(is_marked ? 'Marked as ignored!' : 'Not marked.', { status: 200 });
-            }
+                    if (is_deleted && !is_user) {
+                        await establishRelationship(sender_id, {
+                            relationship_type: "MANAGE_REPORT",
+                            object_id: new ObjectId(report_id),
+                            established_at: new Date(Date.now()),
+                        });
+                    }
+                    else if (is_deleted && is_user) {
+                        await deleteEstablishedRelationship(
+                            sender_id,
+                            report_id,
+                            "POST_REPORT"
+                        );
+                    }
+
+                    return;
+                }
+                else if (command == ManageReportType.MARK_AS_DEALT_WITH) {
+                    if (!is_super) {
+                        errors_occurred++;
+                        return;
+                    }
+                    const is_marked = await markReportAs(report_id, "DEALT_WITH");
+                    if (is_marked) {
+                        await establishRelationship(sender_id, {
+                            relationship_type: "MANAGE_REPORT",
+                            object_id: new ObjectId(report_id),
+                            established_at: new Date(Date.now()),
+                        });
+                    }
+
+                    return;
+                }
+                else if (command == ManageReportType.MARK_AS_IGNORED) {
+                    if (!is_super) {
+                        errors_occurred++;
+                        return;
+                    }
+                    const is_marked = await markReportAs(report_id, "IGNORED");
+                    if (is_marked) {
+                        await establishRelationship(sender_id, {
+                            relationship_type: "MANAGE_REPORT",
+                            object_id: new ObjectId(report_id),
+                            established_at: new Date(Date.now()),
+                        });
+                    }
+
+                    return;
+                }
+            });
+
+            return new Response('Operation(s) completed with ' + errors_occurred + ' error(s)', { status: errors_occurred > 0 ? 400 : 200 });
         }
-
-        return new Response('Bad command choice!', { status: 400 });
+        else {
+            return new Response('Bad command choice!', { status: 400 });
+        }
     }
     
     let { report }: { report: Report } = await request.json();
