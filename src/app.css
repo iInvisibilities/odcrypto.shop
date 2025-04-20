@@ -77,3 +77,21 @@
    linear-gradient(#000 0 0) bottom/100% 50% no-repeat;
   clip-path: polygon(-41% 0,50% 91%, 141% 0);
 }
+
+.for-management {
+	@apply opacity-75 bg-green-700 cursor-default outline-1 outline-gray-500 rounded-md;
+}
+
+.searching {
+	animation: showoff3 1s infinite;
+}
+
+@keyframes showoff3 {
+	0%,100% {
+		scale: 100%;
+	}
+	50% {
+		scale: 90%;
+		opacity: 50%;
+	}
+}

@@ -8,7 +8,6 @@ import { handle as authHandle } from "$lib/server/manager/auth"
 import { generateNewRateLimiter, isEligibaleToRequest, isEligibleResetLimiter, newRequestOccured } from '$lib/server/rate_limiter/ratelimit_strings';
 import { decryptString, encryptString } from '$lib/server/encrypt/encryptor';
 
-
 await connectToMongoDB();
 await connectToRedis();
 connectMinioClient();

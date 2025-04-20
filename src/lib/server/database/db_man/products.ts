@@ -36,3 +36,8 @@ export async function incrementBoughtHowManyTimes(id: string): Promise<void> {
 export async function markAsDeleted(id: string): Promise<void> {
 	await coll.updateOne({ _id: new ObjectId(id) }, { $set: { deleted: true } });
 }
+
+export async function getProductsWithName(name: string): Promise<Product[]> {
+	const products = await coll.find({ name: { $regex: name, $options: 'i' } }).toArray();
+	return products;
+}

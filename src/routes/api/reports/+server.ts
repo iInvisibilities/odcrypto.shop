@@ -1,7 +1,7 @@
 import type { RequestHandler } from "@sveltejs/kit";
 import { json } from "@sveltejs/kit";
 import type { Report } from "$lib/types/reports";
-import { createReport, deleteReport, getReport, getReportsOfObject, getReportsOfUser, markReportAs } from "$lib/server/database/db_man/reports";
+import { createReport, deleteReport, getReport, getReportsOfObject, getReportsOfUser, markReportAs, getReportsOfObject_Name, getReportsOfUser_Name } from "$lib/server/database/db_man/reports";
 import { deleteEstablishedRelationship, establishRelationship, getAllRelationshipsOfType } from "$lib/server/database/db_man/object_relationships";
 import { ManageReportType } from "$lib/types/moderator_actions";
 import { getProduct } from "$lib/server/database/db_man/products";
@@ -16,23 +16,45 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     const is_super = (auth.user as Record<string, any>).is_super;
 	if (!is_super) return new Response("Unauthorized!", { status: 401 });
 
+    const object_name = url.searchParams.get('object_name');
+    const user_name = url.searchParams.get('user_name');
+
     const object_id = url.searchParams.get('object_id');
     const user_id = url.searchParams.get('user_id');
 
-    if (!object_id && !user_id) return new Response('Bad request!', { status: 400 });
+    if (!object_id && !user_id && !object_name && !user_name) return new Response('Bad request!', { status: 400 });
 
     const reports: Report[] = [];
     let chosen_type: string = "";
     if (object_id) {
-        chosen_type = "object";
+        if (!ObjectId.isValid(object_id)) return new Response('Bad object id!', { status: 400 });
+
+        chosen_type = "object_id";
         const reportsOfObject = await getReportsOfObject(object_id);
         reports.push(...reportsOfObject);
     }
     else if (user_id) {
-        chosen_type = "user";
+        if (!ObjectId.isValid(user_id)) return new Response('Bad user id!', { status: 400 });
+        
+        chosen_type = "user_id";
         const reportsOfUser = await getReportsOfUser(user_id);
         reports.push(...reportsOfUser);
     }
+    else if (object_name) {
+        if (object_name.trim().length < 3) return new Response('Bad object name!', { status: 400 });
+
+        chosen_type = "object_name";
+        const reportsOfObject_Name = await getReportsOfObject_Name(object_name);
+        reports.push(...reportsOfObject_Name);
+    }
+    else if (user_name) {
+        if (user_name.trim().length < 3) return new Response('Bad object name!', { status: 400 });
+
+        chosen_type = "user_name";
+        const reportsOfUser_Name = await getReportsOfUser_Name(user_name);
+        reports.push(...reportsOfUser_Name);
+    }
+    if (reports.length == 0) return new Response('No reports found!', { status: 404 });
 
 
     return json({ chosen_type, reports });
@@ -106,7 +128,7 @@ export const POST: RequestHandler = async ({ request, locals, url }) => {
                         established_at: new Date(Date.now()),
                     });
                 }
-                
+
                 return new Response(is_marked ? 'Marked as ignored!' : 'Not marked.', { status: 200 });
             }
         }

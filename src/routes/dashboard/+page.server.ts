@@ -31,6 +31,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const rlp_group_values = Object.values(rlp_groups).map((rlp) => rlp.length);
 
 	return {
+		is_super: (session.user as Record<string, any>).is_super,
 		page_item_count: rlp_group_keys.map((key, index) => ({ key: key as RelationshipType, count: rlp_group_values[index] })),
 		relations: user_object_relationships.relations.map(async (rlp) => {
 			if (!rlp.object_id) return null;
@@ -87,6 +88,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			};
 		})
 	} as {
+		is_super: boolean;
 		page_item_count: { key: RelationshipType; count: number }[];
 		relations: Promise<{
 			rlp: SERRelationship;

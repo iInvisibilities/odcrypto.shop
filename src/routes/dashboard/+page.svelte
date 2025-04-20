@@ -7,6 +7,7 @@
 	import type { SERWallet } from '$lib/types/wallet';
 	import { onMount } from 'svelte';
 	import type { LiveTransactionWithUsernames } from '$lib/types/transaction';
+	import type { Report } from '$lib/types/reports';
 
 	let { data = $bindable() }: PageProps = $props();
 
@@ -126,7 +127,7 @@
 			if (response?.live_transactions_with_usernames) {
 				liveTransactionsSection = response.live_transactions_with_usernames as LiveTransactionWithUsernames;
 				filteredLiveTransactionsSection = response.live_transactions_with_usernames as LiveTransactionWithUsernames;
-				push_not("You're a super user, you can see current live transactions.");
+				push_not("You're a super user.");
 			}
 		}
 	});
@@ -184,7 +185,147 @@
 			return user.includes(searchLower) || product.includes(searchLower) || date.includes(searchLower);
 		});
 	};
+
+	let reports_gui_open = $state(false);
+	let search_type = $state('user_name');
+	let search_value = $state('');
+	let in_reports_gui_notification = $state('Found 0 reports');
+	let selected_reports_to_manage: Report[] = $state([]);
+	let selected_reports_to_manage_count = $state(0);
+	
+	let report_results: Report[] = $state([]);
+	let report_results_count = $state(0);
+
+	let reports_search_box_indicator: HTMLImageElement | undefined = $state(undefined);
+
+	const actOnEnter = (e: KeyboardEvent) => { if (e.key == "Enter") search_for_reports(); };
+
+	function openReportsGUI(event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement; }) {
+		reports_gui_open = true;
+		report_results = [];
+		report_results_count = 0;
+		selected_reports_to_manage = [];
+		selected_reports_to_manage_count = 0;
+
+		document.addEventListener("keyup", actOnEnter);
+	}
+
+
+	const search_for_reports = async () => {
+		if (search_value.trim().length == 0) {
+			in_reports_gui_notification = 'Please enter a search value';
+			return;
+		}
+
+		if (search_value.length < 3) {
+			in_reports_gui_notification = 'Search value must be at least 3 characters long';
+			return;
+		}
+
+		report_results = [];
+		report_results_count = 0;
+		selected_reports_to_manage = [];
+		selected_reports_to_manage_count = 0;
+		reports_search_box_indicator?.classList.add('searching');
+		
+		const search_request = await fetch('/api/reports?' + search_type + '=' + search_value, {
+			method: 'GET'
+		});
+		if (search_request.status == 200) {
+			const response = await search_request.json();
+			if (response?.reports) {
+				report_results = response.reports as Report[];
+				report_results_count = report_results.length;
+				in_reports_gui_notification = 'Found ' + report_results_count + ' report' + (report_results_count == 1 ? '' : 's');
+			}
+		} else if(search_request.status == 404) {
+			in_reports_gui_notification = 'Found 0 reports';
+		} else {
+			in_reports_gui_notification = await search_request.text();
+		}
+
+		reports_search_box_indicator?.classList.remove('searching');
+	}
+
+	function report_clicked(event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement; }, arg0: Report): any {
+		if (!event.ctrlKey) {
+			const c = confirm('Report created at ' + new Date(arg0.created_at).toLocaleString() + '\nStatus: ' + arg0.status + '\nReported ' + arg0.object_id + '\nReason: ' + arg0.reason + '\nGo to reported product page?');
+			if (c) {
+				window.open('/' + arg0.object_id, '_blank');
+			}
+		}
+		else {
+			if (selected_reports_to_manage.includes(arg0)) {
+				selected_reports_to_manage = selected_reports_to_manage.filter((report) => report._id != arg0._id);
+				selected_reports_to_manage_count--;
+				event.currentTarget.classList.remove('for-management');
+			} else {
+				if (selected_reports_to_manage.findLast((report) => report._id == arg0._id)) return;
+				selected_reports_to_manage.push(arg0);
+				selected_reports_to_manage_count++;
+			
+				event.currentTarget.classList.add('for-management');
+			}
+		}
+	}
+
+
+	function close_reports_gui(event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement; }) {
+		document.removeEventListener("keyup", actOnEnter);
+		reports_gui_open = false;
+		search_value = '';
+		search_type = 'user_name';
+		in_reports_gui_notification = 'Found 0 reports';
+		report_results = [];
+		report_results_count = 0;
+		selected_reports_to_manage = [];
+		selected_reports_to_manage_count = 0;
+		if (reports_search_box_indicator) reports_search_box_indicator.classList.remove('searching');
+	}
 </script>
+
+{#if reports_gui_open}
+	<div class="z-20 absolute h-dvh w-dvw text-xl grid items-center justify-center backdrop_eff">
+		<div class="w-full">
+			<div class="flex w-full backdrop_eff_2">
+				<button class="bg-[#FC565E] text-white py-1 px-3 rounded-t-md" onclick={close_reports_gui}>Close</button>
+			</div>
+			<div class="gap-2 max-h-[700px] h-[500px] w-[700px] shadow-lg rounded-b-md rounded-tr-md bg-white p-4 overflow-auto backdrop_eff_2">
+				<div class="mb-2 w-full">
+					<span class="text-gray-500 select-none italic">{selected_reports_to_manage_count != 0 ? "Selected " + selected_reports_to_manage_count + " report" + (selected_reports_to_manage_count == 1 ? '' : 's') : "Ctrl + Click to manage reports"}</span>
+					<div class="flex items-center justify-between gap-2 w-full">
+						<h3 class="text-lg font-bold text-gray-900 flex justify-between xl:justify-start items-end gap-2">Search through reports</h3>
+						<div class="text-center text-gray-500 select-none" contenteditable="false" bind:innerText={in_reports_gui_notification}></div>
+					</div>
+					<div class="flex items-center justify-start gap-2 mt-2 w-full">
+						<select bind:value={search_type} name="search_type" class="py-1 px-2 border-2 border-gray-400 rounded-md outline-none">
+							<option value="user_name">Reported by</option>
+							<option value="object_name">Product name</option>
+							<option value="user_id">User ID</option>
+							<option value="object_id">Product ID</option>
+						</select>
+						<input bind:value={search_value} type="text" placeholder="Search..." class="py-1 px-2 border-2 border-gray-400 rounded-md outline-none" />
+						<button onclick={search_for_reports} class="bg-[#0050ff] border-2 border-[#0050ff] rounded-md text-white py-1 px-3">Search</button>
+					</div>
+				</div>
+				{#if report_results_count > 0}
+					<div class="flex flex-wrap max-w-fit justify-center items-center shadow-lg rounded-md *:h-max bg-white p-2 overflow-auto backdrop_eff_2">
+						{#each report_results as report}
+							<div class="bg-gray-100 p-2 rounded-md grid items-center justify-between gap-2">
+								<button onclick={e => report_clicked(e, report)} class="text-white grid px-2 py-0.5 rounded-md transition-all duration-150 hover:opacity-85 cursor-pointer select-none bg-blue-600">
+									Click to view
+									<span class="select-none opacity-75">{new Date(report.created_at).toLocaleTimeString()}</span>
+								</button>
+							</div>
+						{/each}
+					</div>
+				{:else}
+					<img bind:this={reports_search_box_indicator} src="box.png" class="absolute opacity-30 inset-0 m-auto w-1/4" alt="">	
+				{/if}
+			</div>
+		</div>
+	</div>
+{/if}
 
 {#if isLiveTransactionsMenuOpen && filteredLiveTransactionsSection && liveTransactionsSection}
 	<div class="z-20 absolute h-dvh w-dvw text-xl grid items-center justify-center backdrop_eff">
@@ -289,7 +430,11 @@
 			>Wishlist</DashboardBtn
 		>
 		<DashboardBtn {onclick} onmount={() => {}} src="wallet.svg" val="WALLET">Wallets</DashboardBtn>
-		<DashboardBtn {onclick} onmount={() => {}} src="report.svg" val="POST_REPORT">Reports</DashboardBtn>
+		{#if data.is_super}
+			<button onclick={openReportsGUI} class="hover:opacity-75 cursor-default w-full opacity-80 border-b-2 inline-flex select-none gap-2 text-lg items-center px-4 py-2 text-white bg-fuchsia-700 active min-w-[150px]"><img class="invert" width="25" src="report.svg" alt="">Reports</button>
+		{:else}
+			<DashboardBtn {onclick} onmount={() => {}} src="report.svg" val="POST_REPORT">Reports</DashboardBtn>
+		{/if}
 		<DashboardBtn {onclick} {onmount} src="history-log.svg" val="HISTORY">History</DashboardBtn>
 		{#if liveTransactionsSection}
 			<button onclick={showLiveTransactionsMenu} class="hover:opacity-75 cursor-default w-full opacity-80 border-b-2 inline-flex select-none gap-2 text-lg items-center px-4 py-2 text-white bg-fuchsia-700 active min-w-[150px]"><img class="invert" width="25" src="live.svg" alt="">Live transactions</button>
