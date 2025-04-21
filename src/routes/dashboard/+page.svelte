@@ -347,8 +347,8 @@
 					<div class="flex flex-wrap max-w-fit justify-center items-center shadow-lg rounded-md *:h-max bg-white p-2 overflow-auto backdrop_eff_2">
 						{#each report_results as report}
 							<div class="bg-gray-100 p-2 rounded-md grid items-center justify-between gap-2">
-								<button onclick={e => report_clicked(e, report)} class="text-white grid px-2 py-0.5 rounded-md transition-all duration-150 hover:opacity-85 cursor-pointer select-none bg-blue-600">
-									Click to view
+								<button onclick={e => report_clicked(e, report)} class="text-white grid px-2 py-0.5 rounded-md transition-all duration-150 hover:opacity-85 cursor-pointer select-none {report.status == "ACTIVE" ? "bg-green-700 text-black" : report.status == "IGNORED" ? "bg-yellow-700 text-gray-200" : "bg-blue-700 text-black"}">
+									<span class="p-1 py-0.5 rounded-md">{report.status.replaceAll("_", " ")}</span>
 									<span class="select-none opacity-75">{new Date(report.created_at).toLocaleTimeString()}</span>
 								</button>
 							</div>
