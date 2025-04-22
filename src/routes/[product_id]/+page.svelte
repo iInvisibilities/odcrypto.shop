@@ -144,7 +144,10 @@
                     {/if}
                 </div>
                 <p class="text-gray-500">{data.productObject.description}</p>
-                <p class="text-gray-700">Price: <span class="font-bold text-shadow-2xs">{data.productObject.price} {data.productObject.currency}</span></p>
+                <div>
+                    <p class="text-gray-700">Price: <span class="font-bold text-shadow-2xs">{data.productObject.price} {data.productObject.currency}</span></p>
+                    <p class="text-gray-700">Bought {data.productObject.bought_how_many_times} times</p>
+                </div>
             </div>
         </div>
         <div class="gap-2 place-self-end {(!data.isGuest ? "flex justify-end place-items-end items-end" : "grid")}">
