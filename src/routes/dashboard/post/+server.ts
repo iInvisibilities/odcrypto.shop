@@ -11,6 +11,7 @@ import type { EPInformation, ProductPost } from '$lib/types/product';
 import { json } from '@sveltejs/kit';
 import { hasAllFields } from '$lib/util/TSUtil';
 import { searchPriceAndCode } from 'price-extractor';
+import { ObjectId } from 'mongodb';
 
 const URL_REG =
 	/^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/;
@@ -64,6 +65,7 @@ export const POST = async ({ request, locals, fetch }): Promise<Response> => {
 			const user_id = session.user?.id;
 
 			const created_prod = await createProduct({
+				posted_by: new ObjectId(user_id),
 				name: object.name,
 				description: object.description,
 				price: object.price,

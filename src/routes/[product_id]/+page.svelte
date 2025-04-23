@@ -8,6 +8,7 @@
     let { data }: PageProps = $props();
 
     let { product_id } = page.params;
+    let posted_by: string | undefined = data.posted_by;
 
     let hasWishlisted = $state(data.hasWishlisted ?? false);
 
@@ -136,7 +137,12 @@
             {/if}
             <div class="flex flex-col gap-2">
                 <div class="flex flex-wrap items-center justify-between w-full gap-4">
-                    <h1 class="text-2xl font-bold w-72 max-w-72 text-wrap break-words text-shadow-lg/10">{data.productObject.name}</h1>
+                    <div class="grid">
+                        <h1 class="text-2xl font-bold w-72 max-w-72 text-wrap break-words text-shadow-lg/10">{data.productObject.name}</h1>
+                        {#if posted_by}
+                        <a target="_blank" href="/user/{posted_by}" class="hover:underline text-blue-800">Go to poster's profile</a>
+                        {/if}
+                    </div>
                     {#if !data.isGuest}
                         <div class="flex items-center gap-2">
                             <button title="Add to wishlist" class="{hasWishlisted ? 'bg-red-700' : 'bg-red-200'} w-5 h-5 heart-shape text-transparent select-none cursor-pointer transition-all duration-100 ease-out active:scale-95 active:-skew-2 hover:scale-105" onclick={toggleWishlisted}>_</button>

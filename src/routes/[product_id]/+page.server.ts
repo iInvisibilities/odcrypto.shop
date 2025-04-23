@@ -25,6 +25,7 @@ export const load: PageServerLoad = async ({ url, params, locals }) => {
         
     }
 
+    let posted_by: string | undefined = productObj.posted_by?.toString();
     let hasBought = undefined;
     let hasPosted = undefined;
     let hasWishlisted = undefined;
@@ -40,7 +41,7 @@ export const load: PageServerLoad = async ({ url, params, locals }) => {
         productObj.icon_url = newIconUrl;
     }
 
-    return { isGuest, hasBought, hasPosted, hasWishlisted, productObject: {...productObj, _id: undefined, wallet_id: undefined, file_name: undefined } as Product & { _id?: undefined, wallet_id: undefined, file_name: undefined } } as ProductPageObject;
+    return { posted_by, isGuest, hasBought, hasPosted, hasWishlisted, productObject: {...productObj, posted_by: undefined, _id: undefined, wallet_id: undefined, file_name: undefined } as Product & { _id?: undefined, wallet_id: undefined, file_name: undefined, posted_by: undefined } } as ProductPageObject;
 };
 
 const hasRelationshipWithProduct = async (userId: string, productId: string, relationshipType: RelationshipType) => {
