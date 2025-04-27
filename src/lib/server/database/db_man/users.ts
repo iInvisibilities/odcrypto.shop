@@ -15,3 +15,8 @@ export const findUsersWithName = async (name: string):Promise<Document[]> => {
     const users = await coll.find({ name: { $regex: name, $options: "i" } }).project({ name: 1 }).toArray();
     return users;
 }
+
+export const getUserFromId = async (id: string):Promise<User | null> => {
+    const user = await coll.find({ _id: new ObjectId(id) }).next();
+    return user;
+}
