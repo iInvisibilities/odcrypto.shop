@@ -1,19 +1,21 @@
 <script lang="ts">
-	import type { ProductPageObject } from '$lib/types/product.js';
+	import type { PublicProductObj } from '$lib/types/product.js';
 
     const { data } = $props();
 
     let is_user_products_loaded = $state(false);
     let is_loading_user_products = $state(false);
-    let user_product_objects: undefined | ProductPageObject[] = $state(undefined);
+    let user_product_objects: undefined | PublicProductObj[] = $state(undefined);
     let current_page = $state(0);
 
-
-    const load_user_products = (page: number) => {
+    const load_user_products = async () => {
         is_loading_user_products = true;
         is_user_products_loaded = false;
 
-        //... load specific number if it exceeds specific number and include pagination logic
+        const products = await fetch("/api/products?page=" + current_page, 
+            { method: "POST", body: JSON.stringify({ products_of_user: data.products_of_user }) });
+        const { result }: { result: PublicProductObj[] } = await products.json();
+        user_product_objects = result;
         
         is_loading_user_products = false;
         is_user_products_loaded = true;
@@ -25,3 +27,9 @@
 {/if}
 
 <h1>{data.user.name}</h1>
+<button onclick={load_user_products}>load products</button>
+{#if user_product_objects}
+    {#each user_product_objects as obj}
+        <h1>{obj.name}</h1>
+    {/each}
+{/if}

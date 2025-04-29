@@ -5,6 +5,7 @@ import type { User } from "@auth/sveltekit";
 import { getAllRelationshipsOfType } from "$lib/server/database/db_man/object_relationships";
 
 export const ssr = true;
+export const prerender = true;
 
 export const load:PageServerLoad = async ({ locals, params }) => {
     const user_id = params.user_id;
@@ -14,6 +15,6 @@ export const load:PageServerLoad = async ({ locals, params }) => {
     const products_of_user: string[] = (await getAllRelationshipsOfType(user_id, "POSTED")).map(rlp => rlp.object_id?.toString() ?? "").filter(str => str.length != 0);
     const is_guest = (await locals.auth())?.user?.id == undefined;
 
-    return { user: { ...user, email: undefined }, is_guest, products_of_user, email: undefined } as 
-    { user: User & {email: undefined}, is_guest: boolean, products_of_user: string[] };
+    return { user: { ...user, email: undefined, _id: undefined }, is_guest, products_of_user, email: undefined } as 
+    { user: User & { _id: undefined, email: undefined }, is_guest: boolean, products_of_user: string[] };
 }

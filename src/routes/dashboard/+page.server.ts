@@ -16,6 +16,7 @@ import { getReport } from '$lib/server/database/db_man/reports';
 import type { Report } from '$lib/types/reports';
 
 export const ssr = true;
+export const prerender = true;
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const session = await locals.auth();

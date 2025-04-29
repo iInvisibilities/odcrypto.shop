@@ -14,7 +14,8 @@ export type Product = {
 	deleted?: boolean;
 };
 
-export type ProductPageObject =  { productObject: Product & { _id?: undefined, wallet_id?: undefined, file_name?: undefined, posted_by?: undefined }, isGuest: boolean, hasBought: boolean | undefined, hasPosted: boolean | undefined, hasWishlisted: boolean | undefined, posted_by: string | undefined };
+export type PublicProductObj = Product & { _id?: undefined, wallet_id?: undefined, file_name?: undefined, posted_by?: undefined };
+export type ProductPageObject =  { productObject: PublicProductObj, isGuest: boolean, hasBought: boolean | undefined, hasPosted: boolean | undefined, hasWishlisted: boolean | undefined, posted_by: string | undefined };
 
 export type SERProduct = Product & { _id: string, posted_by: string };
 
