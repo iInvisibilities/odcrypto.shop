@@ -1,8 +1,9 @@
+import { PUBLIC_PRODUCTS_PER_PAGE } from "$env/static/public";
 import { getProduct } from "$lib/server/database/db_man/products";
 import type { Product, PublicProductObj } from "$lib/types/product";
 import { error, json, type RequestHandler } from "@sveltejs/kit";
 
-const PRODUCTS_PER_PAGE = 5;
+const PRODUCTS_PER_PAGE = Number(PUBLIC_PRODUCTS_PER_PAGE);
 
 export const POST: RequestHandler = async ({ request, locals, url }) => {
     const is_guest = !(await locals.auth())?.user?.id;
@@ -10,6 +11,10 @@ export const POST: RequestHandler = async ({ request, locals, url }) => {
     const page = url.searchParams.get("page");
     let pageNumber: number | undefined;
     if (page == null || !isNumeric(page) || (pageNumber = parseInt(page)) < 0) error(400, "No page number specified!");
+
+    if (pageNumber > Math.floor(products_of_user.length / PRODUCTS_PER_PAGE)) {
+        error(400, "No more products to show!");
+    }
 
     let max_products_per_page = products_of_user.length;
     let starting_index = 0;
