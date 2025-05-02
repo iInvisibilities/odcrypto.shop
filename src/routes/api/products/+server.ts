@@ -1,4 +1,6 @@
+import { LOCAL_ICON_URLS_PREFIX } from "$env/static/private";
 import { PUBLIC_PRODUCTS_PER_PAGE } from "$env/static/public";
+import { requestIconDownload } from "$lib/server/cloud_storage/minio_man/upto_bucket";
 import { getProduct } from "$lib/server/database/db_man/products";
 import type { Product, PublicProductObj } from "$lib/types/product";
 import { error, json, type RequestHandler } from "@sveltejs/kit";
@@ -29,6 +31,11 @@ export const POST: RequestHandler = async ({ request, locals, url }) => {
     for (let index = starting_index; index < max_products_per_page; index++) {
         const next_product:Product | null = await getProduct(products_of_user[index]);
         if (next_product == null) error(400, "Cannot find product!");
+        const icon_url = next_product.icon_url;
+        if (icon_url && icon_url.includes(LOCAL_ICON_URLS_PREFIX)) {
+            const newIconUrl = await requestIconDownload(icon_url.replace(LOCAL_ICON_URLS_PREFIX, ""));
+            next_product.icon_url = newIconUrl;
+        }
 
         products_to_be_returned.push({ ...next_product, _id: undefined, wallet_id: undefined, file_name: undefined, posted_by: undefined } as PublicProductObj);
     }

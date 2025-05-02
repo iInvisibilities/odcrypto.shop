@@ -2,7 +2,7 @@ import { LOCAL_ICON_URLS_PREFIX } from "$env/static/private";
 import { requestIconDownload } from "$lib/server/cloud_storage/minio_man/upto_bucket";
 import { getAllRelationshipsOfType } from "$lib/server/database/db_man/object_relationships";
 import { getProduct } from "$lib/server/database/db_man/products";
-import type { Product, ProductPageObject } from "$lib/types/product";
+import type { Product, ProductPageObject, PublicProductObj } from "$lib/types/product";
 import { redirect } from "@sveltejs/kit";
 import type { PageServerLoad } from "../$types";
 import type { RelationshipType } from "$lib/types/object_relationships";
@@ -41,7 +41,7 @@ export const load: PageServerLoad = async ({ url, params, locals }) => {
         productObj.icon_url = newIconUrl;
     }
 
-    return { posted_by, isGuest, hasBought, hasPosted, hasWishlisted, productObject: {...productObj, posted_by: undefined, _id: undefined, wallet_id: undefined, file_name: undefined } as Product & { _id?: undefined, wallet_id: undefined, file_name: undefined, posted_by: undefined } } as ProductPageObject;
+    return { posted_by, isGuest, hasBought, hasPosted, hasWishlisted, productObject: {...productObj, posted_by: undefined, _id: undefined, wallet_id: undefined, file_name: undefined } as PublicProductObj } as ProductPageObject;
 };
 
 const hasRelationshipWithProduct = async (userId: string, productId: string, relationshipType: RelationshipType) => {

@@ -103,7 +103,7 @@
 	}
 </script>
 
-<div class="notification" contenteditable="false" bind:this={push_not_el}></div>
+<div class="notification Coinbase" contenteditable="false" bind:this={push_not_el}></div>
 {#if data.isGuest}
     <a href="/" class="absolute z-10 top-2 left-2 flex items-center justify-center gap-2 w-max bg-gray-200 text-gray-700 px-4 py-2 rounded-md shadow-md hover:bg-gray-300 transition-all duration-150 ease-in-out active:scale-95">
         <img class="w-4 opacity-50" src="../left-arrow.svg" alt="">Home page
@@ -113,7 +113,7 @@
 {/if}
 {#if data.hasPosted}
     {#if data.hasPosted}
-        <div class="absolute w-full md:justify-between justify-center bg-blue-50 text-blue-700 px-4 py-2 shadow-md flex flex-wrap items-center">
+        <div class="Coinbase absolute w-full md:justify-between justify-center bg-blue-50 text-blue-700 px-4 py-2 shadow-md flex flex-wrap items-center">
             <h4 class="font-semibold text-md select-none italic opacity-75">This product has been posted by you</h4>
             <div class="flex">
                 <a href="/dashboard" class="flex text-shadow-md/10 items-center gap-1 text-blue-600 text-xs px-2 py-1 rounded-md hover:bg-blue-100 transition-all duration-150 ease-in-out active:scale-95">
@@ -126,7 +126,7 @@
         </div>
     {/if}
 {/if}
-<div class="p-5 h-dvh grid items-center justify-center">
+<div class="p-5 h-dvh grid items-center justify-center Coinbase">
     <div class="grid gap-3 w-full max-w-3xl border-2 shadow-lg/30 rounded-lg p-5 overflow-auto">
         <div class="flex items-start justify-start gap-5">
             {#if data.productObject.icon_url && data.productObject.icon_url !== ""}

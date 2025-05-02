@@ -7,6 +7,7 @@ import { sequence } from '@sveltejs/kit/hooks';
 import { handle as authHandle } from "$lib/server/manager/auth"
 import { generateNewRateLimiter, isEligibaleToRequest, isEligibleResetLimiter, newRequestOccured } from '$lib/server/rate_limiter/ratelimit_strings';
 import { decryptString, encryptString } from '$lib/server/encrypt/encryptor';
+import { ENABLE_RATE_LIMITING } from '$env/static/private';
 
 await connectToMongoDB();
 await connectToRedis();
@@ -34,7 +35,7 @@ const rateLimitMiddleware: Handle = async ({ event, resolve }) => {
             return await resolve(event);
         }
         
-        if (!isEligibaleToRequest(decryptedCookieString)) {
+        if (!isEligibaleToRequest(decryptedCookieString) && ENABLE_RATE_LIMITING == "true") {
             return new Response("Too many requests, please try again later...", { status: 429 });
         }
         
