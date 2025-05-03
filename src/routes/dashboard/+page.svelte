@@ -63,6 +63,16 @@
 		wallet_address: string = $state('');
 
 	let wallets: SERWallet[] = $state([]);
+	const close_wallet_gui = () => is_adding_wallet = false;
+	const open_wallet_gui = (event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement; }) => {
+		is_adding_wallet = true;
+		document.addEventListener("keyup", (e) => {
+			if (e.key == "Escape") {
+				close_wallet_gui();
+				document.removeEventListener("keyup", close_wallet_gui);
+			}
+		});
+	};
 
 	const try_submit_new_wallet = async () => {
 		is_adding_wallet = false;
@@ -109,11 +119,11 @@
 		wallet_address = '';
 	}
 
-	const fetchAllWalletOptions = () => {
-		relations_data.map((r) => {
-			r.then((obj) => {
-				if (obj && obj?.rlp.relationship_type == 'WALLET') wallets.push(obj.object as SERWallet);
-			});
+	const fetchAllWalletOptions = async () => {
+		if (!relations_data) return;
+		relations_data.map(async (r) => {
+			const obj = await r;
+			if (obj && obj?.rlp.relationship_type == 'WALLET') wallets.push(obj.object as SERWallet);
 		});
 	};
 
@@ -121,7 +131,7 @@
 	let filteredLiveTransactionsSection: LiveTransactionWithUsernames | undefined = $state(undefined);
 
 	onMount(async () => {
-		fetchAllWalletOptions();
+		await fetchAllWalletOptions();
 		const request = await fetch('/dashboard', { method: 'GET' });
 		if (request.status == 200) {
 			const response = await request.json();
@@ -142,9 +152,16 @@
 		}
 	}
 
+	const closeLiveTransactionsMenu = () => isLiveTransactionsMenuOpen = false;
 	let isLiveTransactionsMenuOpen = $state(false);
 	function showLiveTransactionsMenu(event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement; }) {
 		isLiveTransactionsMenuOpen = true;
+		document.addEventListener("keyup", (e) => {
+			if (e.key == "Escape") {
+				closeLiveTransactionsMenu();
+				document.removeEventListener("keyup", closeLiveTransactionsMenu);
+			}
+		});
 	}
 
 
@@ -199,7 +216,10 @@
 
 	let reports_search_box_indicator: HTMLImageElement | undefined = $state(undefined);
 
-	const actOnEnter = (e: KeyboardEvent) => { if (e.key == "Enter") search_for_reports(); };
+	const actOnKeyboard = (e: KeyboardEvent) => { 
+		if (e.key == "Enter") search_for_reports();
+		if (e.key == "Escape") close_reports_gui();
+	 };
 
 	function openReportsGUI(event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement; }) {
 		reports_gui_open = true;
@@ -208,7 +228,7 @@
 		selected_reports_to_manage = [];
 		selected_reports_to_manage_count = 0;
 
-		document.addEventListener("keyup", actOnEnter);
+		document.addEventListener("keyup", actOnKeyboard);
 	}
 
 
@@ -272,7 +292,7 @@
 
 
 	function close_reports_gui() {
-		document.removeEventListener("keyup", actOnEnter);
+		document.removeEventListener("keyup", actOnKeyboard);
 		reports_gui_open = false;
 		search_value = '';
 		search_type = 'user_name';
@@ -492,7 +512,7 @@
 			{#if current_page == 'WALLET'}
 				<div class="text-md md:text-xl">
 					<button
-						onclick={() => (is_adding_wallet = true)}
+						onclick={open_wallet_gui}
 						class="cursor-pointer rounded-md flex items-center gap-2 text-white bg-green-600 p-0.5 md:p-1 shadow-md hover:shadow-lg hover:scale-95 transition-all active:scale-90"
 						><img class="w-8 invert" src="wallet-plus.svg" alt="" />link new wallet</button
 					>
@@ -506,17 +526,12 @@
 					class="text-lg font-bold text-gray-900 dark:text-white mb-2 flex justify-between xl:justify-start items-end gap-2"
 				>
 					<span class="italic text-2xl">{last_sel?.textContent}</span>
-					{#if current_page}
-						<span class="hidden md:block text-sm opacity-50 italic font-extralight select-none"
-							>click on desired {current_page == 'WALLET' ? 'wallet' : 'product'} to visit its page</span
-						>
-					{/if}
 				</h3>
 
 				{#if current_page == 'WALLET'}
 					<div class="text-md md:text-xl">
 						<button
-							onclick={() => (is_adding_wallet = true)}
+							onclick={open_wallet_gui}
 							class="cursor-pointer rounded-md flex items-center gap-2 text-white bg-green-600 p-0.5 md:p-1 shadow-md hover:shadow-lg hover:scale-95 transition-all active:scale-90"
 							><img class="w-8 invert" src="wallet-plus.svg" alt="" />link new wallet</button
 						>

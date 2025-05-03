@@ -22,6 +22,10 @@ const R_LIMIT_COOKIE_SETTINGS: CookieSerializeOptions & { path: string } = {
 };
 
 const rateLimitMiddleware: Handle = async ({ event, resolve }) => {
+    if (event.url.pathname.startsWith('/.well-known/appspecific/com.chrome.devtools')) {
+        return new Response(null, { status: 204 });
+    }
+
     const currentUserLimit: string | undefined = event.cookies.get(R_LIMIT_COOKIE_NAME);
     const currentUserLimit_salt: string | undefined = event.cookies.get(R_LIMIT_COOKIE_NAME + "_iv");
 
