@@ -1,8 +1,9 @@
 import type { LiveTransaction } from '$lib/types/transaction';
 import { ObjectId } from 'mongodb';
 import { deleteLiveTransaction, getLiveTransaction } from '../cache/cache_man/live_transactions';
-import { incrementBoughtHowManyTimes } from '../database/db_man/products';
+import { getProduct, incrementBoughtHowManyTimes } from '../database/db_man/products';
 import { establishRelationship } from '../database/db_man/object_relationships';
+import { getWallet } from '../database/db_man/wallets';
 
 export const handleSuccessfulCharge = async (charge_id: string) => {
 	const liveTransaction: LiveTransaction | null = await getLiveTransaction(charge_id);
@@ -18,4 +19,15 @@ export const handleSuccessfulCharge = async (charge_id: string) => {
 	});
 
 	await deleteLiveTransaction(charge_id, product_id, user_id);
+
+	const product = await getProduct(product_id);
+	if (product == null || product.wallet_id == null) return;
+
+	const wallet = await getWallet(product.wallet_id?.toString());
+	if (wallet == null) return;
+	const wallet_address = wallet.address;
+	const wallet_currency = wallet.type;
+
+	
+
 };
