@@ -28,6 +28,8 @@ export const handleSuccessfulCharge = async (charge_id: string) => {
 	const wallet_address = wallet.address;
 	const wallet_currency = wallet.type;
 
-	
+
 
 };
+
+
