@@ -1,8 +1,5 @@
-import type { User } from "@auth/sveltekit";
 import client from "../mongodb";
 import { MONGODB_NAME, MONGODB_USER_WITHDRAWABLES_COLLECTION } from "$env/static/private";
-import { ObjectId } from "mongodb";
-import type { Document } from "mongodb";
 import type { UserWithdrawables, Withdrawable } from "$lib/types/withdrawable";
 
 const coll = client.db(MONGODB_NAME).collection<UserWithdrawables>(MONGODB_USER_WITHDRAWABLES_COLLECTION);
@@ -22,11 +19,11 @@ export const addWithdrawable = async (user_id: string, withdrawable: Withdrawabl
     }
 }
 
-export const getWithdrawableAmountOfCurrency = async (user_id: string, currency: string): Promise<number> => {
+export const getWithdrawableAmountOfCurrency = async (user_id: string, currency: string): Promise<number | null> => {
     const userWithdrawables = await getUserWithdrawables(user_id);
-    if (userWithdrawables == null) return 0;
+    if (userWithdrawables == null) return null;
     const withdrawable = userWithdrawables.withdrawables.find(w => w.currency === currency);
-    if (withdrawable == null) return 0;
+    if (withdrawable == null) return null;
     return withdrawable.amount;
 }
 
