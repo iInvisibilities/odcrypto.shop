@@ -35,3 +35,17 @@ export const setWithdrawableAmountOfCurrency = async (user_id: string, currency:
         await coll.updateOne({ user_id, "withdrawables.currency": currency }, { $set: { "withdrawables.$.amount": amount } });
     }
 }
+
+export const addWithdrawableAmountOfCurrency = async (user_id: string, currency: string, amount: number): Promise<void> => {
+    const userWithdrawables = await getUserWithdrawables(user_id);
+    if (userWithdrawables == null) {
+        await coll.insertOne({ user_id, withdrawables: [{ currency, amount }] });
+    } else {
+        const withdrawable = userWithdrawables.withdrawables.find(w => w.currency === currency);
+        if (withdrawable == null) {
+            await coll.updateOne({ user_id }, { $push: { withdrawables: { currency, amount } } });
+        } else {
+            await coll.updateOne({ user_id, "withdrawables.currency": currency }, { $set: { "withdrawables.$.amount": withdrawable.amount + amount } });
+        }
+    }
+}

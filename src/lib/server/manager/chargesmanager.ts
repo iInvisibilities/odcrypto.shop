@@ -4,7 +4,7 @@ import { deleteLiveTransaction, getLiveTransaction } from '../cache/cache_man/li
 import { getProduct, incrementBoughtHowManyTimes } from '../database/db_man/products';
 import { establishRelationship } from '../database/db_man/object_relationships';
 import { getWallet } from '../database/db_man/wallets';
-import { addWithdrawable, getWithdrawableAmountOfCurrency, setWithdrawableAmountOfCurrency } from '../database/db_man/withdrawable';
+import { addWithdrawable, addWithdrawableAmountOfCurrency, getWithdrawableAmountOfCurrency, setWithdrawableAmountOfCurrency } from '../database/db_man/withdrawable';
 
 export const handleSuccessfulCharge = async (charge_id: string) => {
 	const liveTransaction: LiveTransaction | null = await getLiveTransaction(charge_id);
@@ -28,13 +28,7 @@ export const handleSuccessfulCharge = async (charge_id: string) => {
 	if (wallet == null) return;
 	const wallet_currency = wallet.type;
 
-
-	const withdrawableAmount = await getWithdrawableAmountOfCurrency(user_id, wallet_currency);
-	if (withdrawableAmount == null) {
-		await addWithdrawable(user_id, { currency: wallet_currency, amount: product.price });
-	} else {
-		await setWithdrawableAmountOfCurrency(user_id, wallet_currency, withdrawableAmount + product.price);
-	}
+	await addWithdrawableAmountOfCurrency(user_id, wallet_currency, product.price);
 };
 
 
